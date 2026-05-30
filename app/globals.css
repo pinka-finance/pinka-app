@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream text-ink font-sans;
+    font-feature-settings: "ss01", "cv11", "kern";
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+
+  ::selection {
+    background-color: rgba(232, 93, 93, 0.18);
+    color: #1a1a1a;
+  }
+
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight text-ink;
+  }
+
+  p {
+    @apply leading-relaxed;
+  }
+}
+
+@layer components {
+  .container-content {
+    @apply mx-auto w-full max-w-content px-5 sm:px-8 lg:px-12;
+  }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 rounded-full bg-coral/10 px-3 py-1 text-xs font-medium uppercase tracking-[0.14em] text-coral-700;
+  }
+
+  .card-base {
+    @apply rounded-lg border border-ink/8 bg-white/60 p-6 sm:p-7 transition-all duration-300;
+  }
+}
