@@ -64,8 +64,14 @@ exists with `state='active'`, `visibility='public'`.
 
 - `/` — public campaign directory
 - `/c/[slug]` — campaign detail + contribute (EPC QR + live polling)
+- `/dashboard` — creator: magic-link sign-in + my campaigns
+- `/dashboard/new` — create campaign (draft)
+- `/dashboard/c/[id]` — manage: edit · activate/pause/close · tiers · contributions · payouts
 
 ## Status / roadmap
 
-Phase 2 (this repo): public campaign pages + checkout. **Next:** creator
-dashboard (auth, campaign CRUD, tiers, payouts) — see plan doc §6.
+Phase 2 (this repo): public campaign pages + checkout **and** creator dashboard
+(email magic-link auth, campaign CRUD, reward/ticket tiers, read-only
+contributions + payouts). **Next:** per-campaign Safe factory at create time
+(currently the creator pastes a Gnosis destination); payout-request flow via RPC;
+on-chain soft-token attestation surfacing. See plan doc §6.

@@ -13,3 +13,16 @@ export function parseEurToCents(raw: string): number | null {
   if (!Number.isFinite(n) || n <= 0) return null;
   return Math.round(n * 100);
 }
+
+/// GitHub-style slug (lowercase, alfanum + crtice; rubovi alfanum), max 60.
+export function slugify(input: string): string {
+  return input
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 60)
+    .replace(/-+$/g, "");
+}
