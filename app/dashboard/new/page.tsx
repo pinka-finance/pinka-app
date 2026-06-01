@@ -8,13 +8,12 @@ import { AuthGate } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { CampaignForm } from "@/components/dashboard/campaign-form";
 import { createCampaign, getMyAccountId } from "@/lib/dashboard";
-import {
-  createPasskey,
-  loadPasskey,
-  pubKeyOf,
-  type PinkaPasskey,
-} from "@/lib/chain/passkey";
+import { slugify } from "@/lib/format";
+import { createPasskey, pubKeyOf, type PinkaPasskey } from "@/lib/chain/passkey";
 import { deriveCampaignSafe, type CampaignSafe } from "@/lib/chain/safe";
+
+const inputCls =
+  "w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-ink/30 focus:outline-none";
 
 export default function NewCampaignPage() {
   return (
@@ -26,18 +25,24 @@ export default function NewCampaignPage() {
 
 function NewInner() {
   const router = useRouter();
-  // Stable id up-front so the per-campaign Safe salt == the row we insert.
   const [draftId] = useState(() => crypto.randomUUID());
+  const [title, setTitle] = useState("");
+  const [passkeyName, setPasskeyName] = useState("");
+  const [nameDirty, setNameDirty] = useState(false);
   const [passkey, setPasskey] = useState<PinkaPasskey | null>(null);
   const [safe, setSafe] = useState<CampaignSafe | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [deriving, setDeriving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Load any existing passkey after mount (avoids SSR hydration mismatch).
+  // Suggest a human-readable, unique passkey label from the campaign title.
+  // Stays in sync until the user manually edits it. `pf-` prefix + short id make
+  // it findable among many in iCloud Keychain / Google Password Manager.
   useEffect(() => {
-    setPasskey(loadPasskey());
-  }, []);
+    if (nameDirty) return;
+    const s = slugify(title) || "kampanja";
+    setPasskeyName(`pf-${s}-${draftId.slice(0, 4)}`);
+  }, [title, nameDirty, draftId]);
 
   const derive = useCallback(
     async (pk: PinkaPasskey) => {
@@ -55,17 +60,17 @@ function NewInner() {
     [draftId],
   );
 
-  // Derive the campaign Safe whenever we have a passkey but no Safe yet.
-  useEffect(() => {
-    if (passkey && !safe && !deriving) void derive(passkey);
-  }, [passkey, safe, deriving, derive]);
-
   async function connect() {
+    if (!title.trim()) {
+      setError("Prvo upiši naziv kampanje.");
+      return;
+    }
     setConnecting(true);
     setError(null);
     try {
-      const pk = await createPasskey("pinka kreator");
+      const pk = await createPasskey(passkeyName.trim() || `pf-${draftId.slice(0, 8)}`);
       setPasskey(pk);
+      await derive(pk);
     } catch (e) {
       console.error(e);
       setError("Passkey nije kreiran (otkazano ili nepodržano).");
@@ -79,33 +84,67 @@ function NewInner() {
       <Link href="/dashboard" className="text-sm text-inkMuted hover:text-ink">
         ← Natrag
       </Link>
-      <h1 className="mt-3 text-display-md font-display font-semibold">
-        Nova kampanja
-      </h1>
+      <h1 className="mt-3 text-display-md font-display font-semibold">Nova kampanja</h1>
       <p className="mt-2 text-sm text-inkMuted">
-        Dva koraka: prvo se izvede <strong>novčanik kampanje</strong>, zatim
-        ispuniš detalje. Kampanja se kreira kao <strong>nacrt</strong> i ne prima
-        uplate dok je ne aktiviraš.
+        Dva koraka: prvo naziv i <strong>novčanik kampanje</strong>, zatim detalji.
+        Kampanja se kreira kao <strong>nacrt</strong> i ne prima uplate dok je ne aktiviraš.
       </p>
 
-      {/* Korak 1 — passkey + Safe */}
+      {/* Korak 1 — naziv + passkey + Safe */}
       <div className="mt-8 card-base">
         <h2 className="flex items-center gap-2 font-display font-semibold">
-          <ShieldCheck className="h-5 w-5 text-coral" /> 1. Novčanik kampanje (Safe)
+          <ShieldCheck className="h-5 w-5 text-coral" /> 1. Naziv i novčanik (Safe)
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-inkMuted">
-          Tvoj <strong>passkey</strong> (Face ID / Touch ID / sigurnosni ključ) je
-          kriptografski ključ vezan uz ovaj uređaj. Iz njega izvodimo Gnosis{" "}
-          <strong>Safe</strong> — multisig novčanik u koji stižu sve donacije kao
-          EURe. Bez lozinki, bez seed-fraza; kontrolu imaš samo ti.
+
+        <div className="mt-5 grid grid-cols-1 gap-x-10 gap-y-2 md:grid-cols-[1fr_minmax(0,22rem)]">
+          <div>
+            <label className="mb-2 block text-sm font-medium">Naziv kampanje</label>
+            <input
+              className={inputCls}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="npr. Nova sezona podcasta o ekonomiji"
+              disabled={!!passkey}
+            />
+          </div>
+          <div className="text-xs leading-relaxed text-inkMuted">
+            Ovo ljudi vide na javnoj stranici. Upiši ga prvo — iz njega predlažemo ime passkeya.
+          </div>
+        </div>
+
+        <div className="mt-5 grid grid-cols-1 gap-x-10 gap-y-2 md:grid-cols-[1fr_minmax(0,22rem)]">
+          <div>
+            <label className="mb-2 block text-sm font-medium">Naziv passkeya</label>
+            <input
+              className={inputCls + " font-mono"}
+              value={passkeyName}
+              onChange={(e) => {
+                setNameDirty(true);
+                setPasskeyName(e.target.value);
+              }}
+              disabled={!!passkey}
+            />
+          </div>
+          <div className="text-xs leading-relaxed text-inkMuted">
+            Tako će passkey izgledati u <strong>iCloud Keychainu / Google Password
+            Manageru / LastPassu</strong>. Prefiks <code>pf-</code> + naziv kampanje znači da
+            ga lako nađeš i kad ih imaš desetke (npr. jedan po epizodi).
+          </div>
+        </div>
+
+        <p className="mt-5 text-sm leading-relaxed text-inkMuted">
+          Tvoj <strong>passkey</strong> (Face ID / Touch ID / sigurnosni ključ) postaje vlasnik
+          Gnosis <strong>Safe</strong>-a u koji stižu donacije kao EURe. Bez lozinki, bez
+          seed-fraza; kontrolu imaš samo ti.
         </p>
+
         {!passkey ? (
-          <Button onClick={connect} disabled={connecting} className="mt-4">
+          <Button onClick={connect} disabled={connecting || !title.trim()} className="mt-4">
             {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
             {connecting ? "Otvaram…" : "Poveži passkey"}
           </Button>
         ) : deriving || !safe ? (
-          <p className="mt-3 flex items-center gap-2 text-sm text-inkMuted">
+          <p className="mt-4 flex items-center gap-2 text-sm text-inkMuted">
             <Loader2 className="h-4 w-4 animate-spin" /> Izvodim adresu Safe-a (čitam s Gnosisa)…
           </p>
         ) : (
@@ -119,8 +158,8 @@ function NewInner() {
               <dd className="break-all font-mono text-coral-700">{safe.safeAddress}</dd>
             </div>
             <p className="pt-1 leading-relaxed text-inkMuted">
-              <strong>Counterfactual</strong>: adresa već postoji i prima EURe, a sam Safe
-              se na blockchainu kreira tek pri prvoj isplati — tako ne plaćaš gas unaprijed.
+              <strong>Counterfactual</strong>: adresa već prima EURe, a sam Safe se na blockchainu
+              kreira tek pri prvoj isplati — tako ne plaćaš gas unaprijed.
             </p>
           </dl>
         )}
@@ -129,9 +168,10 @@ function NewInner() {
       {/* Korak 2 — detalji */}
       <div className="mt-6 card-base">
         <h2 className="font-display font-semibold">2. Detalji kampanje</h2>
-        <div className="mt-4">
+        <div className="mt-2">
           <CampaignForm
             submitLabel="Kreiraj kampanju"
+            lockedTitle={title}
             lockedDestination={safe?.safeAddress ?? null}
             onSubmit={async (v) => {
               if (!safe) throw new Error("safe_not_ready");
@@ -155,6 +195,7 @@ function NewInner() {
                     salt_nonce: safe.saltNonce,
                     pubkey: passkey?.pubKey,
                     credential_id: passkey?.credentialId,
+                    passkey_name: passkeyName.trim(),
                     safe_version: "1.4.1",
                   },
                 },

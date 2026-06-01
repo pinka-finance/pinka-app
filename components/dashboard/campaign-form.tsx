@@ -63,11 +63,14 @@ export function CampaignForm({
   submitLabel,
   onSubmit,
   lockedDestination,
+  lockedTitle,
 }: {
   initial?: Partial<CampaignFormValues>;
   submitLabel: string;
   onSubmit: (v: CampaignFormValues) => Promise<void>;
   lockedDestination?: string | null;
+  // When set, the title is captured elsewhere (step 1) — the field is hidden.
+  lockedTitle?: string;
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [type, setType] = useState<CampaignType>(initial?.type ?? "donation");
@@ -88,7 +91,8 @@ export function CampaignForm({
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!title.trim()) return setError("Naslov je obavezan.");
+    const effectiveTitle = (lockedTitle ?? title).trim();
+    if (!effectiveTitle) return setError("Naslov je obavezan.");
     const dest = (lockedDestination ?? destination).trim();
     if (!ADDR_RE.test(dest)) {
       return setError(
@@ -103,7 +107,7 @@ export function CampaignForm({
     setBusy(true);
     try {
       await onSubmit({
-        title: title.trim(),
+        title: effectiveTitle,
         type,
         description: description.trim(),
         goalCents,
@@ -122,12 +126,14 @@ export function CampaignForm({
 
   return (
     <form onSubmit={submit}>
-      <Field
-        label="Naslov kampanje"
-        desc="Ovo ljudi prvo vide — u listi kampanja i na vrhu javne stranice. Drži ga kratkim i konkretnim (npr. „Nova sezona podcasta o ekonomiji”)."
-      >
-        <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
-      </Field>
+      {lockedTitle === undefined ? (
+        <Field
+          label="Naslov kampanje"
+          desc="Ovo ljudi prvo vide — u listi kampanja i na vrhu javne stranice. Drži ga kratkim i konkretnim (npr. „Nova sezona podcasta o ekonomiji”)."
+        >
+          <input className={inputCls} value={title} onChange={(e) => setTitle(e.target.value)} />
+        </Field>
+      ) : null}
 
       <Field
         label="Tip kampanje"
