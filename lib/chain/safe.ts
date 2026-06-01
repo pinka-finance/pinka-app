@@ -77,12 +77,21 @@ export interface CampaignSafe {
   saltNonce: string;
 }
 
-/// Full per-campaign derivation: passkey pubkey + campaign id → campaign Safe.
+/// Full per-campaign derivation from a passkey pubkey (local-passkey path).
 export async function deriveCampaignSafe(
   pubKey: P256PublicKey,
   campaignId: string,
 ): Promise<CampaignSafe> {
   const signerAddress = await predictSignerAddress(pubKey);
+  return deriveCampaignSafeFromSigner(signerAddress, campaignId);
+}
+
+/// Per-campaign derivation from an already-known signer (ecosystem-wallet path
+/// via the DOMOVINA Wallet SDK — see lib/chain/walletSdk.ts).
+export async function deriveCampaignSafeFromSigner(
+  signerAddress: Address,
+  campaignId: string,
+): Promise<CampaignSafe> {
   const saltNonce = saltFromCampaignId(campaignId);
   const safeAddress = await predictSafeAddress(signerAddress, saltNonce);
   return { signerAddress, safeAddress, saltNonce };
