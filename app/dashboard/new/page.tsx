@@ -75,7 +75,7 @@ function NewInner() {
   }
 
   return (
-    <div className="container-content max-w-2xl py-12">
+    <div className="container-content max-w-4xl py-12">
       <Link href="/dashboard" className="text-sm text-inkMuted hover:text-ink">
         ← Natrag
       </Link>
