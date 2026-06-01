@@ -1,4 +1,4 @@
-import { supabaseServer } from "./supabase";
+import { supabaseBrowser } from "./supabase";
 
 // Tipovi + upiti nad schemom pinka_finance. Vidi:
 //   domovina-api/docs/pinka-finance-platform-plan.md (§3 ER model)
@@ -70,7 +70,7 @@ function normalize(row: Record<string, unknown>): Campaign {
 }
 
 export async function listPublicCampaigns(): Promise<Campaign[]> {
-  const sb = supabaseServer();
+  const sb = supabaseBrowser();
   const { data, error } = await sb
     .schema("pinka_finance")
     .from("campaigns")
@@ -87,7 +87,7 @@ export async function listPublicCampaigns(): Promise<Campaign[]> {
 }
 
 export async function getCampaignBySlug(slug: string): Promise<Campaign | null> {
-  const sb = supabaseServer();
+  const sb = supabaseBrowser();
   const { data, error } = await sb
     .schema("pinka_finance")
     .from("campaigns")
@@ -105,7 +105,7 @@ export async function getCampaignBySlug(slug: string): Promise<Campaign | null> 
 export async function listCampaignContributions(
   campaignId: string,
 ): Promise<PublicContribution[]> {
-  const sb = supabaseServer();
+  const sb = supabaseBrowser();
   const { data, error } = await sb
     .schema("pinka_finance")
     .from("public_contributions")

@@ -122,7 +122,7 @@ function NewInner() {
                   },
                 },
               });
-              router.push(`/dashboard/c/${id}`);
+              router.push(`/dashboard/manage?id=${id}`);
             }}
           />
         </div>

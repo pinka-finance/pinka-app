@@ -1,10 +1,15 @@
-import { listPublicCampaigns } from "@/lib/pinka";
+"use client";
+
+import { useEffect, useState } from "react";
+import { listPublicCampaigns, type Campaign } from "@/lib/pinka";
 import { CampaignCard } from "@/components/campaign-card";
 
-export const dynamic = "force-dynamic";
+export default function HomePage() {
+  const [campaigns, setCampaigns] = useState<Campaign[] | null>(null);
 
-export default async function HomePage() {
-  const campaigns = await listPublicCampaigns();
+  useEffect(() => {
+    listPublicCampaigns().then(setCampaigns).catch(() => setCampaigns([]));
+  }, []);
 
   return (
     <div className="container-content py-14">
@@ -19,7 +24,9 @@ export default async function HomePage() {
         </p>
       </div>
 
-      {campaigns.length === 0 ? (
+      {campaigns === null ? (
+        <p className="mt-12 text-inkMuted">Učitavam…</p>
+      ) : campaigns.length === 0 ? (
         <div className="mt-12 card-base text-center text-inkMuted">
           Trenutno nema aktivnih kampanja.
         </div>

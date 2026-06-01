@@ -11,7 +11,7 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
 
   return (
     <Link
-      href={`/c/${campaign.slug}`}
+      href={`/c?slug=${campaign.slug}`}
       className="card-base block hover:-translate-y-0.5 hover:shadow-lift"
     >
       {campaign.cover_image_url ? (

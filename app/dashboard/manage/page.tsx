@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { AuthGate } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { fmtEur, parseEurToCents } from "@/lib/format";
@@ -20,10 +21,19 @@ import {
   type Payout,
 } from "@/lib/dashboard";
 
-export default function ManageCampaignPage({ params }: { params: { id: string } }) {
+export default function ManageCampaignPage() {
+  return (
+    <Suspense>
+      <ManageGate />
+    </Suspense>
+  );
+}
+
+function ManageGate() {
+  const id = useSearchParams().get("id") ?? "";
   return (
     <AuthGate>
-      <ManageInner id={params.id} />
+      <ManageInner id={id} />
     </AuthGate>
   );
 }
@@ -84,7 +94,7 @@ function ManageInner({ id }: { id: string }) {
             {campaign.visibility === "public" && campaign.state !== "draft" ? (
               <>
                 ·{" "}
-                <Link href={`/c/${campaign.slug}`} className="text-coral hover:underline" target="_blank">
+                <Link href={`/c?slug=${campaign.slug}`} className="text-coral hover:underline" target="_blank">
                   javna stranica ↗
                 </Link>
               </>

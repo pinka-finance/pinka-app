@@ -70,7 +70,7 @@ function DashboardInner() {
           {campaigns.map((c) => (
             <Link
               key={c.id}
-              href={`/dashboard/c/${c.id}`}
+              href={`/dashboard/manage?id=${c.id}`}
               className="card-base flex items-center justify-between !py-4 hover:-translate-y-0.5 hover:shadow-lift"
             >
               <div>
