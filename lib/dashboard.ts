@@ -55,6 +55,7 @@ export interface Payout {
 }
 
 export interface NewCampaignInput {
+  id?: string; // client-generated so the per-campaign Safe salt matches
   accountId: string;
   title: string;
   type: CampaignType;
@@ -65,6 +66,7 @@ export interface NewCampaignInput {
   subjectType: string;
   subjectRef: string | null;
   visibility: "private" | "unlisted" | "public";
+  metadata?: Record<string, unknown>;
 }
 
 const SELECT =
@@ -140,6 +142,7 @@ export async function createCampaign(input: NewCampaignInput): Promise<string> {
       .schema("pinka_finance")
       .from("campaigns")
       .insert({
+        ...(input.id ? { id: input.id } : {}),
         account_id: input.accountId,
         slug,
         type: input.type,
@@ -152,6 +155,7 @@ export async function createCampaign(input: NewCampaignInput): Promise<string> {
         subject_ref: input.subjectRef,
         visibility: input.visibility,
         state: "draft",
+        ...(input.metadata ? { metadata: input.metadata } : {}),
       })
       .select("id")
       .single();

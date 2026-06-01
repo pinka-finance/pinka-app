@@ -35,10 +35,14 @@ export function CampaignForm({
   initial,
   submitLabel,
   onSubmit,
+  lockedDestination,
 }: {
   initial?: Partial<CampaignFormValues>;
   submitLabel: string;
   onSubmit: (v: CampaignFormValues) => Promise<void>;
+  // When set (e.g. a passkey-derived per-campaign Safe), the address field is
+  // replaced by a read-only display and this value is used as the destination.
+  lockedDestination?: string | null;
 }) {
   const [title, setTitle] = useState(initial?.title ?? "");
   const [type, setType] = useState<CampaignType>(initial?.type ?? "donation");
@@ -62,8 +66,13 @@ export function CampaignForm({
     e.preventDefault();
     setError(null);
     if (!title.trim()) return setError("Naslov je obavezan.");
-    if (!ADDR_RE.test(destination.trim())) {
-      return setError("Odredišna Gnosis adresa (0x… 40 hex) je obavezna.");
+    const dest = (lockedDestination ?? destination).trim();
+    if (!ADDR_RE.test(dest)) {
+      return setError(
+        lockedDestination
+          ? "Safe kampanje još nije izveden — poveži passkey."
+          : "Odredišna Gnosis adresa (0x… 40 hex) je obavezna.",
+      );
     }
     const minCents = parseEurToCents(min) ?? 100;
     const goalCents = goal.trim() ? parseEurToCents(goal) : null;
@@ -76,7 +85,7 @@ export function CampaignForm({
         description: description.trim(),
         goalCents,
         minContributionCents: minCents,
-        destinationAddress: destination.trim(),
+        destinationAddress: dest,
         subjectType: subjectType.trim() || "generic",
         subjectRef: subjectRef.trim() || null,
         visibility,
@@ -134,13 +143,31 @@ export function CampaignForm({
         </div>
       </div>
 
-      <div>
-        <label className={labelCls}>Odredišni Safe / adresa (Gnosis)</label>
-        <input className={inputCls + " font-mono"} value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="0x…" />
-        <p className="mt-1 text-xs text-inkMuted">
-          EURe se prosljeđuje izravno na ovu adresu. Preporuka: Safe kampanje.
-        </p>
-      </div>
+      {lockedDestination !== undefined ? (
+        <div>
+          <label className={labelCls}>Safe kampanje (Gnosis)</label>
+          {lockedDestination ? (
+            <p className="rounded-lg border border-ink/10 bg-sand/40 px-3 py-2 font-mono text-xs break-all">
+              {lockedDestination}
+            </p>
+          ) : (
+            <p className="rounded-lg border border-dashed border-ink/15 px-3 py-2 text-xs text-inkMuted">
+              Poveži passkey iznad — Safe se izvodi automatski.
+            </p>
+          )}
+          <p className="mt-1 text-xs text-inkMuted">
+            Counterfactual adresa (0 gas). Inicijalizira se on-chain pri prvoj isplati.
+          </p>
+        </div>
+      ) : (
+        <div>
+          <label className={labelCls}>Odredišni Safe / adresa (Gnosis)</label>
+          <input className={inputCls + " font-mono"} value={destination} onChange={(e) => setDestination(e.target.value)} placeholder="0x…" />
+          <p className="mt-1 text-xs text-inkMuted">
+            EURe se prosljeđuje izravno na ovu adresu. Preporuka: Safe kampanje.
+          </p>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
