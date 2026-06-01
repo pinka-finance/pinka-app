@@ -83,42 +83,44 @@ function NewInner() {
         Nova kampanja
       </h1>
       <p className="mt-2 text-sm text-inkMuted">
-        Kampanja dobiva <strong>vlastiti Safe</strong> na Gnosisu, pod kontrolom
-        tvog passkeya. Kreira se kao <strong>nacrt</strong>.
+        Dva koraka: prvo se izvede <strong>novčanik kampanje</strong>, zatim
+        ispuniš detalje. Kampanja se kreira kao <strong>nacrt</strong> i ne prima
+        uplate dok je ne aktiviraš.
       </p>
 
       {/* Korak 1 — passkey + Safe */}
       <div className="mt-8 card-base">
         <h2 className="flex items-center gap-2 font-display font-semibold">
-          <ShieldCheck className="h-5 w-5 text-coral" /> 1. Safe kampanje
+          <ShieldCheck className="h-5 w-5 text-coral" /> 1. Novčanik kampanje (Safe)
         </h2>
+        <p className="mt-2 text-sm leading-relaxed text-inkMuted">
+          Tvoj <strong>passkey</strong> (Face ID / Touch ID / sigurnosni ključ) je
+          kriptografski ključ vezan uz ovaj uređaj. Iz njega izvodimo Gnosis{" "}
+          <strong>Safe</strong> — multisig novčanik u koji stižu sve donacije kao
+          EURe. Bez lozinki, bez seed-fraza; kontrolu imaš samo ti.
+        </p>
         {!passkey ? (
-          <>
-            <p className="mt-2 text-sm text-inkMuted">
-              Poveži passkey (Face ID / Touch ID / sigurnosni ključ). On postaje
-              vlasnik Safe-a u koji stižu donacije.
-            </p>
-            <Button onClick={connect} disabled={connecting} className="mt-4">
-              {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
-              {connecting ? "Otvaram…" : "Poveži passkey"}
-            </Button>
-          </>
+          <Button onClick={connect} disabled={connecting} className="mt-4">
+            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+            {connecting ? "Otvaram…" : "Poveži passkey"}
+          </Button>
         ) : deriving || !safe ? (
           <p className="mt-3 flex items-center gap-2 text-sm text-inkMuted">
-            <Loader2 className="h-4 w-4 animate-spin" /> Izvodim counterfactual Safe adresu…
+            <Loader2 className="h-4 w-4 animate-spin" /> Izvodim adresu Safe-a (čitam s Gnosisa)…
           </p>
         ) : (
-          <dl className="mt-3 space-y-1.5 text-xs">
-            <div className="flex gap-2">
-              <dt className="w-28 shrink-0 text-inkMuted">Vlasnik (signer)</dt>
+          <dl className="mt-4 space-y-2 text-xs">
+            <div>
+              <dt className="text-inkMuted">Vlasnik (signer) — izveden iz passkeya, kontrolira Safe</dt>
               <dd className="break-all font-mono">{safe.signerAddress}</dd>
             </div>
-            <div className="flex gap-2">
-              <dt className="w-28 shrink-0 text-inkMuted">Safe kampanje</dt>
+            <div>
+              <dt className="text-inkMuted">Safe kampanje — adresa na koju stižu donacije</dt>
               <dd className="break-all font-mono text-coral-700">{safe.safeAddress}</dd>
             </div>
-            <p className="pt-1 text-inkMuted">
-              Counterfactual (0 gas) — inicijalizira se on-chain pri prvoj isplati.
+            <p className="pt-1 leading-relaxed text-inkMuted">
+              <strong>Counterfactual</strong>: adresa već postoji i prima EURe, a sam Safe
+              se na blockchainu kreira tek pri prvoj isplati — tako ne plaćaš gas unaprijed.
             </p>
           </dl>
         )}
