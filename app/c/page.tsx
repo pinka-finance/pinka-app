@@ -12,9 +12,11 @@ import {
 import { fmtEur } from "@/lib/format";
 import { ContributePanel } from "@/components/contribute-panel";
 
-// EURe (Monerium) on Gnosis — used to deep-link the campaign Safe's on-chain
-// balance so anyone can verify funds independently of our offchain status.
-const EURE_GNOSIS = "0xcB444e90D8198415266c6a2724b7900fb12FC56E";
+// EURe (Monerium) on Gnosis — the canonical proxy 0x420CA0f9 that the rail uses
+// and that EMITS the Transfer events to the campaign Safe (verified on-chain).
+// NB: 0xcB444e90 ("EUR emoney") is the implementation address; transfers don't
+// show under its token page. Use the proxy for the public verification links.
+const EURE_GNOSIS = "0x420CA0f9B9b604cE0fd9C18EF134C705e5Fa3430";
 
 export default function CampaignPage() {
   return (
