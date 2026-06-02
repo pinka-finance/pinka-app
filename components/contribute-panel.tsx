@@ -25,9 +25,11 @@ const PRESETS = [200, 500, 1000, 2000];
 export function ContributePanel({
   campaignId,
   minContributionCents,
+  onPaid,
 }: {
   campaignId: string;
   minContributionCents: number;
+  onPaid?: () => void;
 }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [amountCents, setAmountCents] = useState<number>(
@@ -70,6 +72,7 @@ export function ContributePanel({
         if (state === "paid") {
           stopPoll();
           setPhase("paid");
+          onPaid?.(); // let the wall refresh + animate the new entry immediately
         } else if (state === "failed" || state === "expired" || attempts > 300) {
           stopPoll();
         }
@@ -77,7 +80,7 @@ export function ContributePanel({
       void tick(); // immediate first check, then every 3s (up to ~15 min)
       pollRef.current = setInterval(tick, 3000);
     },
-    [stopPoll],
+    [stopPoll, onPaid],
   );
 
   function pickPreset(cents: number) {

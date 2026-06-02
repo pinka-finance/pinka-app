@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -30,17 +30,46 @@ function CampaignInner() {
   const slug = useSearchParams().get("slug") ?? "";
   const [campaign, setCampaign] = useState<Campaign | null | undefined>(undefined);
   const [contributions, setContributions] = useState<PublicContribution[]>([]);
+  // ids that just arrived → play the wall "arrive" animation once
+  const [flashIds, setFlashIds] = useState<Set<string>>(new Set());
+  const seenRef = useRef<Set<string>>(new Set());
+  const firstLoadRef = useRef(true);
+
+  // Re-fetch campaign (live stats) + contributions; flag newly-seen ids so the
+  // wall can animate them in. Called on mount, on a 12s poll, and immediately
+  // when the user's own contribution flips paid (ContributePanel onPaid).
+  const refresh = useCallback(async () => {
+    if (!slug) return;
+    const c = await getCampaignBySlug(slug);
+    if (!c) {
+      setCampaign((prev) => (prev === undefined ? null : prev));
+      return;
+    }
+    setCampaign(c);
+    const list = await listCampaignContributions(c.id);
+    setContributions(list);
+    if (firstLoadRef.current) {
+      list.forEach((x) => seenRef.current.add(x.id));
+      firstLoadRef.current = false;
+      return;
+    }
+    const fresh = list.filter((x) => !seenRef.current.has(x.id));
+    if (fresh.length) {
+      fresh.forEach((x) => seenRef.current.add(x.id));
+      setFlashIds(new Set(fresh.map((x) => x.id)));
+      setTimeout(() => setFlashIds(new Set()), 2400);
+    }
+  }, [slug]);
 
   useEffect(() => {
     if (!slug) {
       setCampaign(null);
       return;
     }
-    getCampaignBySlug(slug).then(async (c) => {
-      setCampaign(c);
-      if (c) setContributions(await listCampaignContributions(c.id));
-    });
-  }, [slug]);
+    void refresh();
+    const t = setInterval(() => void refresh(), 12000);
+    return () => clearInterval(t);
+  }, [slug, refresh]);
 
   if (campaign === undefined) {
     return <div className="container-content py-16 text-inkMuted">Učitavam…</div>;
@@ -81,7 +110,10 @@ function CampaignInner() {
               <h2 className="text-lg font-display font-semibold">Zid podrške</h2>
               <ul className="mt-4 space-y-3">
                 {contributions.map((c) => (
-                  <li key={c.id} className="card-base !p-4">
+                  <li
+                    key={c.id}
+                    className={"card-base !p-4 " + (flashIds.has(c.id) ? "pinka-arrive" : "")}
+                  >
                     <div className="flex items-center justify-between">
                       <span className="font-medium">{c.display_name?.trim() || "Anoniman"}</span>
                       <span className="text-coral-700">{fmtEur(c.amount_cents)} €</span>
@@ -119,6 +151,7 @@ function CampaignInner() {
           <ContributePanel
             campaignId={campaign.id}
             minContributionCents={campaign.min_contribution_cents}
+            onPaid={refresh}
           />
 
           {campaign.destination_address ? (
