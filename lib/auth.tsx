@@ -17,6 +17,7 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   signInWithEmail: (email: string) => Promise<void>;
+  verifyEmailOtp: (email: string, code: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -52,6 +53,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       if (error) throw error;
     },
+    verifyEmailOtp: async (email: string, code: string) => {
+      // Same OTP GoTrue mailed; type "email" covers the magic-link/email-OTP
+      // flow. On success onAuthStateChange fires and AuthGate renders children.
+      const sb = supabaseBrowser();
+      const { error } = await sb.auth.verifyOtp({
+        email,
+        token: code.trim(),
+        type: "email",
+      });
+      if (error) throw error;
+    },
     signOut: async () => {
       await supabaseBrowser().auth.signOut();
     },
@@ -84,18 +96,52 @@ export function AuthGate({ children }: { children: ReactNode }) {
 }
 
 function SignIn() {
-  const { signInWithEmail } = useAuth();
+  const { signInWithEmail, verifyEmailOtp } = useAuth();
   const [email, setEmail] = useState("");
-  const [state, setState] = useState<"idle" | "sending" | "sent" | "error">("idle");
+  const [code, setCode] = useState("");
+  // step "email" → enter address; step "code" → enter the 6-digit OTP (or just
+  // click the link in the mail, which logs in via onAuthStateChange anyway).
+  const [step, setStep] = useState<"email" | "code">("email");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  async function submit(e: React.FormEvent) {
+  async function sendCode(e: React.FormEvent) {
     e.preventDefault();
-    setState("sending");
+    setBusy(true);
+    setError(null);
     try {
       await signInWithEmail(email.trim());
-      setState("sent");
+      setStep("code");
     } catch {
-      setState("error");
+      setError("Greška pri slanju. Pokušaj ponovno.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function confirmCode(e: React.FormEvent) {
+    e.preventDefault();
+    setBusy(true);
+    setError(null);
+    try {
+      await verifyEmailOtp(email, code);
+      // success → AuthGate re-renders children; nothing else to do here.
+    } catch {
+      setError("Kod nije točan ili je istekao. Provjeri i pokušaj ponovno.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function resend() {
+    setBusy(true);
+    setError(null);
+    try {
+      await signInWithEmail(email.trim());
+    } catch {
+      setError("Greška pri ponovnom slanju.");
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -106,32 +152,73 @@ function SignIn() {
         <h1 className="mt-5 text-2xl font-display font-semibold">
           Prijava za kreatore
         </h1>
-        <p className="mt-2 text-sm text-inkMuted">
-          Pošaljemo ti čarobnu poveznicu na e-mail.
-        </p>
-        {state === "sent" ? (
-          <p className="mt-6 rounded-md bg-coral/10 p-4 text-sm text-coral-700">
-            Provjeri e-mail — poslali smo ti poveznicu za prijavu.
-          </p>
+
+        {step === "email" ? (
+          <>
+            <p className="mt-2 text-sm text-inkMuted">
+              Upiši e-mail — pošaljemo ti kod (i poveznicu) za prijavu.
+            </p>
+            <form onSubmit={sendCode} className="mt-6 space-y-3">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="ti@email.com"
+                className="w-full rounded-full border border-ink/15 px-4 py-3 text-sm focus:border-ink/30 focus:outline-none"
+              />
+              {error ? <p className="text-sm text-rust">{error}</p> : null}
+              <Button type="submit" disabled={busy} className="w-full">
+                {busy ? "Šaljem…" : "Pošalji kod"}
+              </Button>
+            </form>
+          </>
         ) : (
-          <form onSubmit={submit} className="mt-6 space-y-3">
-            <input
-              type="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="ti@email.com"
-              className="w-full rounded-full border border-ink/15 px-4 py-3 text-sm focus:border-ink/30 focus:outline-none"
-            />
-            {state === "error" ? (
-              <p className="text-sm text-rust">
-                Greška pri slanju. Pokušaj ponovno.
-              </p>
-            ) : null}
-            <Button type="submit" disabled={state === "sending"} className="w-full">
-              {state === "sending" ? "Šaljem…" : "Pošalji poveznicu"}
-            </Button>
-          </form>
+          <>
+            <p className="mt-2 text-sm text-inkMuted">
+              Poslali smo kod na <strong>{email}</strong>. Upiši ga ovdje — ili
+              jednostavno klikni poveznicu iz maila.
+            </p>
+            <form onSubmit={confirmCode} className="mt-6 space-y-3">
+              <input
+                type="text"
+                required
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={8}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="123456"
+                className="w-full rounded-2xl border border-ink/15 px-4 py-3 text-center font-mono text-2xl tracking-[0.5em] focus:border-ink/30 focus:outline-none"
+              />
+              {error ? <p className="text-sm text-rust">{error}</p> : null}
+              <Button type="submit" disabled={busy || code.length < 6} className="w-full">
+                {busy ? "Provjeravam…" : "Potvrdi i prijavi se"}
+              </Button>
+            </form>
+            <div className="mt-4 flex items-center justify-between text-xs text-inkMuted">
+              <button
+                type="button"
+                onClick={() => {
+                  setStep("email");
+                  setCode("");
+                  setError(null);
+                }}
+                className="hover:text-ink"
+              >
+                ← Promijeni e-mail
+              </button>
+              <button
+                type="button"
+                onClick={resend}
+                disabled={busy}
+                className="hover:text-ink disabled:opacity-50"
+              >
+                Pošalji ponovno
+              </button>
+            </div>
+          </>
         )}
       </div>
     </div>
