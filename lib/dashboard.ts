@@ -41,6 +41,8 @@ export interface DashContribution {
   amount_received_cents: number | null;
   state: string;
   display_name: string | null;
+  message: string | null;
+  message_hidden: boolean;
   created_at: string;
   paid_at: string | null;
 }
@@ -239,12 +241,26 @@ export async function listContributions(campaignId: string): Promise<DashContrib
   const { data, error } = await sb
     .schema("pinka_finance")
     .from("contributions")
-    .select("id, amount_cents, amount_received_cents, state, display_name, created_at, paid_at")
+    .select("id, amount_cents, amount_received_cents, state, display_name, message, message_hidden, created_at, paid_at")
     .eq("campaign_id", campaignId)
     .order("created_at", { ascending: false })
     .limit(100);
   if (error) throw error;
   return (data ?? []) as DashContribution[];
+}
+
+/// Owner moderation: hide/unhide a contribution's message + link preview on the
+/// public wall. Gated server-side (set_contribution_message_hidden checks the
+/// caller owns the campaign).
+export async function setContributionHidden(contributionId: string, hidden: boolean): Promise<void> {
+  const sb = supabaseBrowser();
+  const { error } = await sb
+    .schema("pinka_finance")
+    .rpc("set_contribution_message_hidden", {
+      p_contribution_id: contributionId,
+      p_hidden: hidden,
+    });
+  if (error) throw error;
 }
 
 export async function listPayouts(campaignId: string): Promise<Payout[]> {

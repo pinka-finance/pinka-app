@@ -14,6 +14,7 @@ import {
   createTier,
   deleteTier,
   listContributions,
+  setContributionHidden,
   listPayouts,
   type MyCampaign,
   type Tier,
@@ -174,7 +175,7 @@ function ManageInner({ id }: { id: string }) {
           <TiersTab campaignId={id} tiers={tiers} onChange={reload} />
         ) : null}
 
-        {tab === "contributions" ? <ContributionsTab rows={contribs} /> : null}
+        {tab === "contributions" ? <ContributionsTab rows={contribs} onChange={reload} /> : null}
 
         {tab === "payouts" ? <PayoutsTab rows={payouts} /> : null}
       </div>
@@ -255,8 +256,28 @@ function TiersTab({
   );
 }
 
-function ContributionsTab({ rows }: { rows: DashContribution[] }) {
+function ContributionsTab({
+  rows,
+  onChange,
+}: {
+  rows: DashContribution[];
+  onChange: () => void;
+}) {
+  const [busyId, setBusyId] = useState<string | null>(null);
   if (rows.length === 0) return <p className="text-inkMuted">Još nema doprinosa.</p>;
+
+  async function toggleHidden(r: DashContribution) {
+    setBusyId(r.id);
+    try {
+      await setContributionHidden(r.id, !r.message_hidden);
+      onChange();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -266,15 +287,40 @@ function ContributionsTab({ rows }: { rows: DashContribution[] }) {
             <th className="py-2 pr-4 font-medium">Ime</th>
             <th className="py-2 pr-4 font-medium">Iznos</th>
             <th className="py-2 pr-4 font-medium">Stanje</th>
+            <th className="py-2 font-medium">Poruka (zid)</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
-            <tr key={r.id} className="border-b border-ink/5">
-              <td className="py-2 pr-4">{new Date(r.created_at).toLocaleDateString("hr")}</td>
+            <tr key={r.id} className="border-b border-ink/5 align-top">
+              <td className="py-2 pr-4 whitespace-nowrap">{new Date(r.created_at).toLocaleDateString("hr")}</td>
               <td className="py-2 pr-4">{r.display_name?.trim() || "—"}</td>
-              <td className="py-2 pr-4">{fmtEur(r.amount_received_cents ?? r.amount_cents)} €</td>
+              <td className="py-2 pr-4 whitespace-nowrap">{fmtEur(r.amount_received_cents ?? r.amount_cents)} €</td>
               <td className="py-2 pr-4">{r.state}</td>
+              <td className="py-2">
+                {r.message ? (
+                  <div className="flex items-start gap-2">
+                    <span
+                      className={
+                        "line-clamp-2 max-w-xs " +
+                        (r.message_hidden ? "text-inkMuted line-through" : "text-ink")
+                      }
+                    >
+                      {r.message}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => toggleHidden(r)}
+                      disabled={busyId === r.id}
+                      className="shrink-0 rounded-full border border-ink/15 px-2 py-0.5 text-xs hover:border-ink/30 disabled:opacity-50"
+                    >
+                      {busyId === r.id ? "…" : r.message_hidden ? "Prikaži" : "Sakrij"}
+                    </button>
+                  </div>
+                ) : (
+                  <span className="text-inkMuted">—</span>
+                )}
+              </td>
             </tr>
           ))}
         </tbody>
