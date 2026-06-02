@@ -56,22 +56,26 @@ export function ContributePanel({
       const sb = supabaseBrowser();
       let attempts = 0;
       stopPoll();
-      pollRef.current = setInterval(async () => {
+      const tick = async () => {
         attempts += 1;
+        // SECURITY DEFINER RPC keyed by the (unguessable) contribution id —
+        // a guest/anon session can't read its own contributions row via RLS
+        // (no account → is_account_member fails), so a direct select never saw
+        // 'paid'. The RPC returns only {state, paid_at}.
         const { data } = await sb
           .schema("pinka_finance")
-          .from("contributions")
-          .select("state")
-          .eq("id", contributionId)
-          .maybeSingle();
-        const state = (data as { state?: string } | null)?.state;
+          .rpc("contribution_status", { p_contribution_id: contributionId });
+        const row = Array.isArray(data) ? data[0] : data;
+        const state = (row as { state?: string } | null)?.state;
         if (state === "paid") {
           stopPoll();
           setPhase("paid");
-        } else if (state === "failed" || state === "expired" || attempts > 100) {
+        } else if (state === "failed" || state === "expired" || attempts > 300) {
           stopPoll();
         }
-      }, 3000);
+      };
+      void tick(); // immediate first check, then every 3s (up to ~15 min)
+      pollRef.current = setInterval(tick, 3000);
     },
     [stopPoll],
   );
