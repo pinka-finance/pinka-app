@@ -22,15 +22,30 @@ interface ContributionResult {
 
 const PRESETS = [200, 500, 1000, 2000];
 
+// Monerium EURe V2 on Gnosis (proxy that emits Transfer events; the rail + the
+// on-chain indexer use this). See docs/reference/monerium-contracts.md.
+const EURE_GNOSIS_V2 = "0x420CA0f9B9b604cE0fd9C18EF134C705e5Fa3430";
+const GNOSIS_CHAIN_ID = 100;
+
+// EIP-681 ERC-20 transfer URI for an EURe donation to the campaign Safe.
+// EURe has 18 decimals; cents → wei = cents * 1e16.
+function eip681(destination: string, amountCents: number): string {
+  const wei = (BigInt(amountCents) * 10n ** 16n).toString();
+  return `ethereum:${EURE_GNOSIS_V2}@${GNOSIS_CHAIN_ID}/transfer?address=${destination}&uint256=${wei}`;
+}
+
 export function ContributePanel({
   campaignId,
   minContributionCents,
+  destinationAddress,
   onPaid,
 }: {
   campaignId: string;
   minContributionCents: number;
+  destinationAddress?: string | null;
   onPaid?: () => void;
 }) {
+  const [mode, setMode] = useState<"sepa" | "onchain">("sepa");
   const [phase, setPhase] = useState<Phase>("idle");
   const [amountCents, setAmountCents] = useState<number>(
     Math.max(500, minContributionCents),
@@ -184,8 +199,29 @@ export function ContributePanel({
       <h3 className="flex items-center gap-2 text-lg font-display font-semibold">
         <Heart className="h-5 w-5 text-coral" /> Podrži ovu kampanju
       </h3>
-      <p className="mt-1.5 text-sm text-inkMuted">
-        Doniraj jednim skenom — SEPA, bez naknade.
+
+      {destinationAddress ? (
+        <div className="mt-3 inline-flex rounded-full border border-ink/10 p-0.5 text-sm">
+          {(["sepa", "onchain"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={
+                "rounded-full px-3 py-1 transition-colors " +
+                (mode === m ? "bg-coral text-cream" : "text-inkMuted hover:text-ink")
+              }
+            >
+              {m === "sepa" ? "SEPA" : "On-chain"}
+            </button>
+          ))}
+        </div>
+      ) : null}
+
+      <p className="mt-2 text-sm text-inkMuted">
+        {mode === "sepa"
+          ? "Doniraj jednim skenom — SEPA, bez naknade."
+          : "Pošalji EURe (Gnosis) skenom iz novčanika — izravno na lanac."}
       </p>
 
       <div className="mt-5 flex flex-wrap gap-2">
@@ -216,6 +252,8 @@ export function ContributePanel({
         />
       </div>
 
+      {mode === "sepa" ? (
+      <>
       <div className="mt-4 space-y-2">
         <input
           type="text"
@@ -267,6 +305,31 @@ export function ContributePanel({
         )}
         {creating ? "Pripremam…" : `Podrži s ${fmtEur(amountCents)} €`}
       </Button>
+      </>
+      ) : (
+        <div className="mt-5">
+          <div className="flex justify-center">
+            <div className="rounded-lg bg-white p-4 shadow-soft">
+              <QRCodeSVG
+                value={eip681(destinationAddress ?? "", amountCents)}
+                size={300}
+                level="M"
+                marginSize={4}
+              />
+            </div>
+          </div>
+          <p className="mt-3 text-center text-sm text-inkMuted">
+            Skeniraj novčanikom (MetaMask / Monerium) i pošalji {fmtEur(amountCents)} € u EURe.
+          </p>
+          <dl className="mt-4 space-y-1.5 text-sm">
+            <CopyRow label="Primatelj" value={destinationAddress ?? ""} />
+            <CopyRow label="Token" value="EURe · Monerium V2 · Gnosis" />
+          </dl>
+          <p className="mt-3 text-center text-xs text-inkMuted">
+            Donacija se pojavi na zidu podrške kad stigne na lanac (~1–2 min).
+          </p>
+        </div>
+      )}
     </div>
   );
 }

@@ -151,6 +151,7 @@ function CampaignInner() {
           <ContributePanel
             campaignId={campaign.id}
             minContributionCents={campaign.min_contribution_cents}
+            destinationAddress={campaign.destination_address}
             onPaid={refresh}
           />
 
