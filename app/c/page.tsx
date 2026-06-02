@@ -12,6 +12,10 @@ import {
 import { fmtEur } from "@/lib/format";
 import { ContributePanel } from "@/components/contribute-panel";
 
+// EURe (Monerium) on Gnosis — used to deep-link the campaign Safe's on-chain
+// balance so anyone can verify funds independently of our offchain status.
+const EURE_GNOSIS = "0xcB444e90D8198415266c6a2724b7900fb12FC56E";
+
 export default function CampaignPage() {
   return (
     <Suspense>
@@ -110,6 +114,27 @@ function CampaignInner() {
             campaignId={campaign.id}
             minContributionCents={campaign.min_contribution_cents}
           />
+
+          {campaign.destination_address ? (
+            <div className="card-base">
+              <h3 className="text-sm font-display font-semibold">Provjeri na lancu</h3>
+              <p className="mt-1 text-xs leading-relaxed text-inkMuted">
+                Uplate stižu izravno na Safe kampanje (EURe na Gnosis lancu).
+                Stanje može provjeriti bilo tko — neovisno o nama.
+              </p>
+              <a
+                href={`https://gnosisscan.io/token/${EURE_GNOSIS}?a=${campaign.destination_address}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-coral-700 hover:underline"
+              >
+                EURe saldo na Gnosisscanu ↗
+              </a>
+              <p className="mt-2 break-all font-mono text-[11px] text-inkMuted">
+                {campaign.destination_address}
+              </p>
+            </div>
+          ) : null}
         </aside>
       </div>
     </div>

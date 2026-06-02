@@ -29,6 +29,8 @@ export interface Campaign {
   currency: string;
   cover_image_url: string | null;
   state: string;
+  destination_address: string | null; // campaign's on-chain Safe (public, verifiable)
+  chain: string;
   stats: CampaignStats;
 }
 
@@ -43,6 +45,7 @@ export interface PublicContribution {
 const CAMPAIGN_SELECT =
   "id, slug, type, title, description, subject_type, subject_ref, " +
   "goal_cents, min_contribution_cents, currency, cover_image_url, state, " +
+  "destination_address, chain, " +
   "campaign_stats(total_raised_cents, contribution_count, contributor_count)";
 
 function normalize(row: Record<string, unknown>): Campaign {
@@ -61,6 +64,8 @@ function normalize(row: Record<string, unknown>): Campaign {
     currency: (row.currency as string) ?? "eur",
     cover_image_url: (row.cover_image_url as string) ?? null,
     state: (row.state as string) ?? "active",
+    destination_address: (row.destination_address as string) ?? null,
+    chain: (row.chain as string) ?? "gnosis",
     stats: {
       total_raised_cents: (stats as CampaignStats).total_raised_cents ?? 0,
       contribution_count: (stats as CampaignStats).contribution_count ?? 0,
