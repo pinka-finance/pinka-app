@@ -34,9 +34,15 @@ export function ContributePanel({
     Math.max(500, minContributionCents),
   );
   const [custom, setCustom] = useState("");
+  const [displayName, setDisplayName] = useState("");
+  const [message, setMessage] = useState("");
+  const [anonymous, setAnonymous] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ContributionResult | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const NAME_MAX = 60;
+  const MSG_MAX = 280;
 
   const stopPoll = useCallback(() => {
     if (pollRef.current) {
@@ -93,7 +99,17 @@ export function ContributePanel({
       await ensureSession(sb);
       const { data, error: invokeErr } = await sb.functions.invoke(
         "pinka-contribute",
-        { body: { campaign_id: campaignId, amount_cents: amountCents } },
+        {
+          body: {
+            campaign_id: campaignId,
+            amount_cents: amountCents,
+            anonymous,
+            // Only send identity/message when NOT anonymous (the public wall
+            // hides anonymous contributions entirely).
+            display_name: anonymous ? null : displayName.trim().slice(0, NAME_MAX) || null,
+            message: anonymous ? null : message.trim().slice(0, MSG_MAX) || null,
+          },
+        },
       );
       if (invokeErr) throw invokeErr;
       const res = data as ContributionResult & { error?: string };
@@ -191,6 +207,43 @@ export function ContributePanel({
           placeholder="Ostalo"
           className="w-24 rounded-full border border-ink/15 px-4 py-2 text-sm focus:border-ink/30 focus:outline-none"
         />
+      </div>
+
+      <div className="mt-4 space-y-2">
+        <input
+          type="text"
+          value={displayName}
+          maxLength={NAME_MAX}
+          disabled={anonymous}
+          onChange={(e) => setDisplayName(e.target.value)}
+          placeholder="Ime ili nadimak (opcionalno)"
+          className="w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-ink/30 focus:outline-none disabled:opacity-50"
+        />
+        <div>
+          <textarea
+            value={message}
+            maxLength={MSG_MAX}
+            disabled={anonymous}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Poruka uz podršku (opcionalno)"
+            rows={2}
+            className="w-full resize-none rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-ink/30 focus:outline-none disabled:opacity-50"
+          />
+          {!anonymous && message.length > 0 ? (
+            <p className="mt-0.5 text-right text-[11px] text-inkMuted">
+              {message.length}/{MSG_MAX}
+            </p>
+          ) : null}
+        </div>
+        <label className="flex items-center gap-2 text-sm text-inkMuted">
+          <input
+            type="checkbox"
+            checked={anonymous}
+            onChange={(e) => setAnonymous(e.target.checked)}
+            className="h-4 w-4 rounded border-ink/30 text-coral focus:ring-coral"
+          />
+          Doniraj anonimno (ne prikazuj me na zidu podrške)
+        </label>
       </div>
 
       {error ? <p className="mt-3 text-sm text-rust">{error}</p> : null}

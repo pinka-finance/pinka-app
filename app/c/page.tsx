@@ -84,7 +84,11 @@ function CampaignInner() {
                       <span className="font-medium">{c.display_name?.trim() || "Anoniman"}</span>
                       <span className="text-coral-700">{fmtEur(c.amount_cents)} €</span>
                     </div>
-                    {c.message ? <p className="mt-1 text-sm text-inkMuted">{c.message}</p> : null}
+                    {c.message ? (
+                      <p className="mt-1 whitespace-pre-line text-sm text-inkMuted">
+                        <Linkify text={c.message} />
+                      </p>
+                    ) : null}
                   </li>
                 ))}
               </ul>
@@ -148,6 +152,32 @@ function CampaignInner() {
         </aside>
       </div>
     </div>
+  );
+}
+
+// Render plain-text message, turning http(s) URLs into safe external links.
+// React escapes the text nodes; links get nofollow + noopener to avoid passing
+// SEO/referrer juice or window.opener to arbitrary donor-supplied targets.
+// (Rich OG previews are Phase B.)
+function Linkify({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(https?:\/\/[^\s]+)/g).map((part, i) =>
+        /^https?:\/\//.test(part) ? (
+          <a
+            key={i}
+            href={part}
+            target="_blank"
+            rel="nofollow noopener noreferrer"
+            className="break-all text-coral-700 underline"
+          >
+            {part}
+          </a>
+        ) : (
+          part
+        ),
+      )}
+    </>
   );
 }
 
