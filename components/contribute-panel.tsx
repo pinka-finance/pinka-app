@@ -133,7 +133,12 @@ export function ContributePanel({
         </p>
         <div className="mt-5 flex justify-center">
           <div className="rounded-lg bg-white p-4 shadow-soft">
-            <QRCodeSVG value={result.epc_qr_data} size={220} level="M" />
+            {/* 320px + 4-module quiet zone mirrors the wallet.domovina.ai QR
+                (qr-code-styling @320, ECC M) that Revolut iOS scans reliably.
+                The EPC v002 payload is dense (~v8-9, ~50 modules); at the old
+                220px (~4px/module) Revolut's camera couldn't lock on even
+                though lenient QR-reader apps decoded it fine. Same EPC string. */}
+            <QRCodeSVG value={result.epc_qr_data} size={320} level="M" marginSize={4} />
           </div>
         </div>
         <dl className="mt-5 space-y-1.5 text-sm">
