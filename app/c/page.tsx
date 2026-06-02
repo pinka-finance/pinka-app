@@ -122,14 +122,24 @@ function CampaignInner() {
                 Uplate stižu izravno na Safe kampanje (EURe na Gnosis lancu).
                 Stanje može provjeriti bilo tko — neovisno o nama.
               </p>
-              <a
-                href={`https://gnosisscan.io/token/${EURE_GNOSIS}?a=${campaign.destination_address}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-coral-700 hover:underline"
-              >
-                EURe saldo na Gnosisscanu ↗
-              </a>
+              <div className="mt-3 flex flex-col gap-1.5">
+                <a
+                  href={`https://gnosisscan.io/token/${EURE_GNOSIS}?a=${campaign.destination_address}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-coral-700 hover:underline"
+                >
+                  EURe saldo na Gnosisscanu ↗
+                </a>
+                <a
+                  href={`https://gnosisscan.io/address/${campaign.destination_address}#tokentxns`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 text-sm font-medium text-coral-700 hover:underline"
+                >
+                  Povijest priljeva (transferi) ↗
+                </a>
+              </div>
               <p className="mt-2 break-all font-mono text-[11px] text-inkMuted">
                 {campaign.destination_address}
               </p>
