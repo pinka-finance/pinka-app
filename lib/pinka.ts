@@ -124,3 +124,23 @@ export async function listCampaignContributions(
   }
   return (data ?? []) as PublicContribution[];
 }
+
+export interface OnchainConfirm {
+  mined: boolean;
+  credited: number;
+  reverted?: boolean;
+}
+
+/// Verify + credit an in-app DOMOVINA-wallet on-chain donation by its tx hash.
+/// Returns mined=false while the tx is still pending (caller polls).
+export async function confirmOnchain(
+  campaignId: string,
+  txHash: string,
+): Promise<OnchainConfirm> {
+  const sb = supabaseBrowser();
+  const { data, error } = await sb.functions.invoke("pinka-onchain-confirm", {
+    body: { campaign_id: campaignId, tx_hash: txHash },
+  });
+  if (error) throw error;
+  return data as OnchainConfirm;
+}

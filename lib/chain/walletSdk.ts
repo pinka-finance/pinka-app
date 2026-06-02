@@ -57,3 +57,12 @@ export async function connectWallet(): Promise<EcosystemWallet> {
     signerAddress: r.signerAddress as `0x${string}`,
   };
 }
+
+/// Send EURe from the user's DOMOVINA wallet (in-iframe confirm + Face ID) to
+/// `to`. `amount` is an EURe decimal string (e.g. "5.00"). Returns the tx hash;
+/// pinka then verifies+credits it via the pinka-onchain-confirm edge fn.
+export async function sendEure(to: string, amount: string): Promise<{ txHash: string }> {
+  await loadSdk();
+  if (!window.Domovina) throw new Error("wallet_sdk_unavailable");
+  return window.Domovina.send({ to, amount });
+}

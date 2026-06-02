@@ -2,10 +2,12 @@
 
 import { useCallback, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { Copy, Heart, Loader2, CheckCircle2 } from "lucide-react";
+import { Copy, Heart, Loader2, CheckCircle2, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabaseBrowser, ensureSession } from "@/lib/supabase";
 import { fmtEur, parseEurToCents } from "@/lib/format";
+import { sendEure } from "@/lib/chain/walletSdk";
+import { confirmOnchain } from "@/lib/pinka";
 
 type Phase = "idle" | "creating" | "awaiting" | "paid";
 
@@ -57,6 +59,9 @@ export function ContributePanel({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ContributionResult | null>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const [walletPhase, setWalletPhase] = useState<"idle" | "sending" | "confirming">("idle");
+  const [walletErr, setWalletErr] = useState<string | null>(null);
 
   const NAME_MAX = 60;
   const MSG_MAX = 280;
@@ -143,6 +148,41 @@ export function ContributePanel({
       console.error(e);
       setPhase("idle");
       setError("Neuspjelo kreiranje uplate. Pokušaj ponovno.");
+    }
+  }
+
+  // In-app on-chain donation: send EURe from the DOMOVINA wallet (SDK), then
+  // verify+credit the resulting tx (pinka-onchain-confirm) for an instant flip —
+  // no waiting for the cron indexer.
+  async function payFromWallet() {
+    if (!destinationAddress) return;
+    if (amountCents < minContributionCents) {
+      setWalletErr(`Najmanji iznos je ${fmtEur(minContributionCents)} €`);
+      return;
+    }
+    setWalletErr(null);
+    setWalletPhase("sending");
+    try {
+      const { txHash } = await sendEure(destinationAddress, (amountCents / 100).toFixed(2));
+      setWalletPhase("confirming");
+      // Poll the verifier until the tx mines + credits (~Gnosis 5s blocks).
+      for (let i = 0; i < 20; i++) {
+        const r = await confirmOnchain(campaignId, txHash);
+        if (r.reverted) throw new Error("reverted");
+        if (r.credited > 0) {
+          setPhase("paid");
+          onPaid?.();
+          return;
+        }
+        await new Promise((res) => setTimeout(res, 3000));
+      }
+      // Mined slowly or still settling — the cron indexer will catch it; show a soft note.
+      setWalletErr("Uplata poslana — pojavit će se na zidu čim se potvrdi na lancu.");
+      setWalletPhase("idle");
+    } catch (e) {
+      console.error(e);
+      setWalletPhase("idle");
+      setWalletErr("Slanje iz novčanika nije uspjelo ili je otkazano.");
     }
   }
 
@@ -308,6 +348,32 @@ export function ContributePanel({
       </>
       ) : (
         <div className="mt-5">
+          <Button
+            onClick={payFromWallet}
+            disabled={walletPhase !== "idle"}
+            className="w-full"
+          >
+            {walletPhase === "idle" ? (
+              <Wallet className="h-4 w-4" />
+            ) : (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            )}
+            {walletPhase === "sending"
+              ? "Otvaram novčanik…"
+              : walletPhase === "confirming"
+                ? "Potvrđujem na lancu…"
+                : `Plati ${fmtEur(amountCents)} € iz DOMOVINA novčanika`}
+          </Button>
+          {walletErr ? (
+            <p className="mt-2 text-center text-sm text-rust">{walletErr}</p>
+          ) : null}
+
+          <div className="my-4 flex items-center gap-3 text-xs text-inkMuted">
+            <span className="h-px flex-1 bg-ink/10" />
+            ili skeniraj drugim novčanikom
+            <span className="h-px flex-1 bg-ink/10" />
+          </div>
+
           <div className="flex justify-center">
             <div className="rounded-lg bg-white p-4 shadow-soft">
               <QRCodeSVG
