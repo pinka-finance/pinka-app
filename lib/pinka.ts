@@ -34,10 +34,19 @@ export interface Campaign {
   stats: CampaignStats;
 }
 
+export interface LinkPreview {
+  url: string;
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  siteName: string | null;
+}
+
 export interface PublicContribution {
   id: string;
   display_name: string | null;
   message: string | null;
+  link_preview: LinkPreview | null;
   amount_cents: number;
   created_at: string;
 }
@@ -114,7 +123,7 @@ export async function listCampaignContributions(
   const { data, error } = await sb
     .schema("pinka_finance")
     .from("public_contributions")
-    .select("id, display_name, message, amount_cents, created_at")
+    .select("id, display_name, message, link_preview, amount_cents, created_at")
     .eq("campaign_id", campaignId)
     .order("amount_cents", { ascending: false })
     .limit(50);

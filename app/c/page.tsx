@@ -123,6 +123,28 @@ function CampaignInner() {
                         <Linkify text={c.message} />
                       </p>
                     ) : null}
+                    {c.link_preview && (c.link_preview.title || c.link_preview.description) ? (
+                      <a
+                        href={c.link_preview.url}
+                        target="_blank"
+                        rel="nofollow noopener noreferrer"
+                        className="mt-2 block rounded-lg border border-ink/10 bg-white/70 p-3 transition-colors hover:border-coral/40"
+                      >
+                        <p className="text-[11px] uppercase tracking-wide text-inkMuted">
+                          {c.link_preview.siteName ?? "poveznica"} ↗
+                        </p>
+                        {c.link_preview.title ? (
+                          <p className="mt-0.5 line-clamp-2 text-sm font-medium text-ink">
+                            {c.link_preview.title}
+                          </p>
+                        ) : null}
+                        {c.link_preview.description ? (
+                          <p className="mt-0.5 line-clamp-2 text-xs text-inkMuted">
+                            {c.link_preview.description}
+                          </p>
+                        ) : null}
+                      </a>
+                    ) : null}
                   </li>
                 ))}
               </ul>
