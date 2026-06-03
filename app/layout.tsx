@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { SeoSync } from "@/components/seo-sync";
 import "./globals.css";
 
 const inter = Inter({
@@ -29,11 +30,31 @@ export const metadata: Metadata = {
   },
   description:
     "Podrži kampanje jednim skenom — SEPA Instant + Monerium EURe, bez kartičnih provizija, izravno autoru, transparentno na lancu.",
+  // Croatian is the default/canonical; English is reachable at ?lang=en. SeoSync
+  // (client) swaps title/description/og:locale live on language switch and emits
+  // the per-language hreflang + canonical (Next's metadata API drops the ?lang
+  // query from alternates, so those are injected at runtime instead).
+  alternates: {
+    canonical: siteUrl,
+  },
   openGraph: {
     type: "website",
     locale: "hr_HR",
+    alternateLocale: ["en_US"],
     url: siteUrl,
     siteName: "pinka",
+    images: [
+      {
+        url: "/og-hr.png",
+        width: 1200,
+        height: 630,
+        alt: "pinka — podrži kampanje jednim skenom",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-hr.png"],
   },
 };
 
@@ -53,6 +74,7 @@ export default function RootLayout({
     <html lang="hr" className={`${inter.variable} ${fraunces.variable}`}>
       <body>
         <I18nProvider>
+          <SeoSync />
           <AuthProvider>
             <SiteHeader />
             <main id="main">{children}</main>

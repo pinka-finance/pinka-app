@@ -62,6 +62,18 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   const [locale, setLocaleState] = useState<Locale>("hr");
 
   useEffect(() => {
+    // ?lang= wins (the hreflang alternate URL, e.g. /?lang=en) and is persisted,
+    // otherwise fall back to the previously chosen locale.
+    const param = new URLSearchParams(window.location.search).get("lang");
+    if (param === "hr" || param === "en") {
+      setLocaleState(param);
+      try {
+        window.localStorage.setItem(STORAGE_KEY, param);
+      } catch {
+        /* ignore */
+      }
+      return;
+    }
     const saved = window.localStorage.getItem(STORAGE_KEY);
     if (saved === "hr" || saved === "en") setLocaleState(saved);
   }, []);

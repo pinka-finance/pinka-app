@@ -21,6 +21,12 @@ const hr = {
     copyright: "© pinka.finance",
     rail: "SEPA Instant · Monerium EURe · Gnosis",
   },
+  seo: {
+    title: "pinka — kampanje",
+    description:
+      "Podrži kampanje jednim skenom — SEPA Instant + Monerium EURe, bez kartičnih provizija, izravno autoru, transparentno na lancu.",
+    ogImageAlt: "pinka — podrži kampanje jednim skenom",
+  },
   common: {
     loading: "Učitavam…",
     allCampaigns: "Sve kampanje",
@@ -329,6 +335,12 @@ const en: Messages = {
   footer: {
     copyright: "© pinka.finance",
     rail: "SEPA Instant · Monerium EURe · Gnosis",
+  },
+  seo: {
+    title: "pinka — campaigns",
+    description:
+      "Support campaigns with a single scan — SEPA Instant + Monerium EURe, no card fees, directly to the creator, transparently on-chain.",
+    ogImageAlt: "pinka — support campaigns with a single scan",
   },
   common: {
     loading: "Loading…",

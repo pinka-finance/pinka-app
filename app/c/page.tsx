@@ -74,6 +74,11 @@ function CampaignInner() {
     return () => clearInterval(t);
   }, [slug, refresh]);
 
+  // Campaign pages own their document title (the campaign name) for SEO/sharing.
+  useEffect(() => {
+    if (campaign) document.title = `${campaign.title} · pinka`;
+  }, [campaign]);
+
   if (campaign === undefined) {
     return <div className="container-content py-16 text-inkMuted">{t("common.loading")}</div>;
   }
