@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
-import Link from "next/link";
-import { Logo } from "@/components/logo";
 import { AuthProvider } from "@/lib/auth";
+import { I18nProvider } from "@/lib/i18n";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
+import { SeoSync } from "@/components/seo-sync";
 import "./globals.css";
 
 const inter = Inter({
@@ -28,11 +30,31 @@ export const metadata: Metadata = {
   },
   description:
     "Podrži kampanje jednim skenom — SEPA Instant + Monerium EURe, bez kartičnih provizija, izravno autoru, transparentno na lancu.",
+  // Croatian is the default/canonical; English is reachable at ?lang=en. SeoSync
+  // (client) swaps title/description/og:locale live on language switch and emits
+  // the per-language hreflang + canonical (Next's metadata API drops the ?lang
+  // query from alternates, so those are injected at runtime instead).
+  alternates: {
+    canonical: siteUrl,
+  },
   openGraph: {
     type: "website",
     locale: "hr_HR",
+    alternateLocale: ["en_US"],
     url: siteUrl,
     siteName: "pinka",
+    images: [
+      {
+        url: "/og-hr.png",
+        width: 1200,
+        height: 630,
+        alt: "pinka — podrži kampanje jednim skenom",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-hr.png"],
   },
 };
 
@@ -51,34 +73,14 @@ export default function RootLayout({
   return (
     <html lang="hr" className={`${inter.variable} ${fraunces.variable}`}>
       <body>
-        <header className="border-b border-ink/8">
-          <div className="container-content flex h-16 items-center justify-between">
-            <Link href="/" aria-label="pinka — naslovnica">
-              <Logo />
-            </Link>
-            <nav className="flex items-center gap-6 text-sm text-inkMuted">
-              <Link href="/" className="hover:text-ink">Kampanje</Link>
-              <Link href="/dashboard" className="hover:text-ink">Za kreatore</Link>
-              <a
-                href="https://pinka.finance"
-                className="hover:text-ink"
-                target="_blank"
-                rel="noreferrer"
-              >
-                O projektu
-              </a>
-            </nav>
-          </div>
-        </header>
-        <main id="main">
-          <AuthProvider>{children}</AuthProvider>
-        </main>
-        <footer className="mt-24 border-t border-ink/8">
-          <div className="container-content flex h-20 items-center justify-between text-sm text-inkMuted">
-            <span>© pinka.finance</span>
-            <span>SEPA Instant · Monerium EURe · Gnosis</span>
-          </div>
-        </footer>
+        <I18nProvider>
+          <SeoSync />
+          <AuthProvider>
+            <SiteHeader />
+            <main id="main">{children}</main>
+            <SiteFooter />
+          </AuthProvider>
+        </I18nProvider>
       </body>
     </html>
   );

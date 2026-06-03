@@ -2,6 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { ShieldCheck } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import {
   getCampaignBySlug,
@@ -11,6 +12,7 @@ import {
 } from "@/lib/pinka";
 import { fmtEur } from "@/lib/format";
 import { ContributePanel } from "@/components/contribute-panel";
+import { useI18n } from "@/lib/i18n";
 
 // EURe (Monerium) on Gnosis — the canonical proxy 0x420CA0f9 that the rail uses
 // and that EMITS the Transfer events to the campaign Safe (verified on-chain).
@@ -27,6 +29,7 @@ export default function CampaignPage() {
 }
 
 function CampaignInner() {
+  const { t } = useI18n();
   const slug = useSearchParams().get("slug") ?? "";
   const [campaign, setCampaign] = useState<Campaign | null | undefined>(undefined);
   const [contributions, setContributions] = useState<PublicContribution[]>([]);
@@ -71,14 +74,19 @@ function CampaignInner() {
     return () => clearInterval(t);
   }, [slug, refresh]);
 
+  // Campaign pages own their document title (the campaign name) for SEO/sharing.
+  useEffect(() => {
+    if (campaign) document.title = `${campaign.title} · pinka`;
+  }, [campaign]);
+
   if (campaign === undefined) {
-    return <div className="container-content py-16 text-inkMuted">Učitavam…</div>;
+    return <div className="container-content py-16 text-inkMuted">{t("common.loading")}</div>;
   }
   if (campaign === null) {
     return (
       <div className="container-content py-16">
-        <p className="text-inkMuted">Kampanja nije pronađena.</p>
-        <Link href="/" className="text-coral hover:underline">← Sve kampanje</Link>
+        <p className="text-inkMuted">{t("campaign.notFound")}</p>
+        <Link href="/" className="text-coral hover:underline">← {t("common.allCampaigns")}</Link>
       </div>
     );
   }
@@ -99,7 +107,7 @@ function CampaignInner() {
           ) : (
             <div className="mb-6 h-64 w-full rounded-lg bg-gradient-to-br from-coral-100 to-teal-100" />
           )}
-          <span className="eyebrow">{campaignTypeLabel(campaign.type)}</span>
+          <span className="eyebrow">{t(campaignTypeKey(campaign.type))}</span>
           <h1 className="mt-4 text-display-md font-display font-semibold">{campaign.title}</h1>
           {campaign.description ? (
             <p className="mt-4 whitespace-pre-line text-inkSoft">{campaign.description}</p>
@@ -107,7 +115,7 @@ function CampaignInner() {
 
           {contributions.length > 0 ? (
             <section className="mt-10">
-              <h2 className="text-lg font-display font-semibold">Zid podrške</h2>
+              <h2 className="text-lg font-display font-semibold">{t("campaign.supportWall")}</h2>
               <ul className="mt-4 space-y-3">
                 {contributions.map((c) => (
                   <li
@@ -115,7 +123,18 @@ function CampaignInner() {
                     className={"card-base !p-4 " + (flashIds.has(c.id) ? "pinka-arrive" : "")}
                   >
                     <div className="flex items-center justify-between">
-                      <span className="font-medium">{c.display_name?.trim() || "Anoniman"}</span>
+                      <span className="flex items-center gap-1.5 font-medium">
+                        {c.display_name?.trim() || t("campaign.anonymous")}
+                        {c.verified ? (
+                          <span
+                            title={t("campaign.verifiedTitle")}
+                            className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-teal-700"
+                          >
+                            <ShieldCheck className="h-3 w-3" />
+                            {t("campaign.verifiedBadge")}
+                          </span>
+                        ) : null}
+                      </span>
                       <span className="text-coral-700">{fmtEur(c.amount_cents)} €</span>
                     </div>
                     {c.message ? (
@@ -131,7 +150,7 @@ function CampaignInner() {
                         className="mt-2 block rounded-lg border border-ink/10 bg-white/70 p-3 transition-colors hover:border-coral/40"
                       >
                         <p className="text-[11px] uppercase tracking-wide text-inkMuted">
-                          {c.link_preview.siteName ?? "poveznica"} ↗
+                          {c.link_preview.siteName ?? t("campaign.linkFallback")} ↗
                         </p>
                         {c.link_preview.title ? (
                           <p className="mt-0.5 line-clamp-2 text-sm font-medium text-ink">
@@ -157,16 +176,17 @@ function CampaignInner() {
             <p className="text-3xl font-display font-semibold">{fmtEur(stats.total_raised_cents)} €</p>
             {goal_cents ? (
               <>
-                <p className="mt-1 text-sm text-inkMuted">od cilja {fmtEur(goal_cents)} €</p>
+                <p className="mt-1 text-sm text-inkMuted">{t("campaign.ofGoal", { goal: fmtEur(goal_cents) })}</p>
                 <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-sand">
                   <div className="h-full bg-coral" style={{ width: `${pct}%` }} />
                 </div>
               </>
             ) : (
-              <p className="mt-1 text-sm text-inkMuted">prikupljeno</p>
+              <p className="mt-1 text-sm text-inkMuted">{t("campaign.collected")}</p>
             )}
             <p className="mt-3 text-sm text-inkMuted">
-              {stats.contributor_count} podržavatelja · {stats.contribution_count} uplata
+              {t("units.supporters", { count: stats.contributor_count })} ·{" "}
+              {t("units.contributions", { count: stats.contribution_count })}
             </p>
           </div>
 
@@ -179,10 +199,9 @@ function CampaignInner() {
 
           {campaign.destination_address ? (
             <div className="card-base">
-              <h3 className="text-sm font-display font-semibold">Provjeri na lancu</h3>
+              <h3 className="text-sm font-display font-semibold">{t("campaign.verifyTitle")}</h3>
               <p className="mt-1 text-xs leading-relaxed text-inkMuted">
-                Uplate stižu izravno na Safe kampanje (EURe na Gnosis lancu).
-                Stanje može provjeriti bilo tko — neovisno o nama.
+                {t("campaign.verifyDesc")}
               </p>
               <div className="mt-3 flex flex-col gap-1.5">
                 <a
@@ -191,7 +210,7 @@ function CampaignInner() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-sm font-medium text-coral-700 hover:underline"
                 >
-                  EURe saldo na Gnosisscanu ↗
+                  {t("campaign.eureBalance")}
                 </a>
                 <a
                   href={`https://gnosisscan.io/address/${campaign.destination_address}#tokentxns`}
@@ -199,7 +218,7 @@ function CampaignInner() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1 text-sm font-medium text-coral-700 hover:underline"
                 >
-                  Povijest priljeva (transferi) ↗
+                  {t("campaign.inflowHistory")}
                 </a>
               </div>
               <p className="mt-2 break-all font-mono text-[11px] text-inkMuted">
@@ -239,13 +258,14 @@ function Linkify({ text }: { text: string }) {
   );
 }
 
-function campaignTypeLabel(type: string): string {
+// Maps a campaign type to its i18n key under `campaign.types.*`.
+function campaignTypeKey(type: string): string {
   switch (type) {
-    case "donation": return "Donacija";
-    case "crowdfund": return "Crowdfunding";
-    case "tokenization": return "Tokenizacija";
-    case "tickets": return "Ulaznice";
-    case "realestate": return "Nekretnina";
-    default: return "Kampanja";
+    case "donation": return "campaign.types.donation";
+    case "crowdfund": return "campaign.types.crowdfund";
+    case "tokenization": return "campaign.types.tokenization";
+    case "tickets": return "campaign.types.tickets";
+    case "realestate": return "campaign.types.realestate";
+    default: return "campaign.types.generic";
   }
 }

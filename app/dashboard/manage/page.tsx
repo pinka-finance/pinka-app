@@ -7,6 +7,7 @@ import { AuthGate } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { fmtEur, parseEurToCents } from "@/lib/format";
 import { CampaignForm } from "@/components/dashboard/campaign-form";
+import { useI18n } from "@/lib/i18n";
 import {
   getMyCampaign,
   updateCampaign,
@@ -40,6 +41,7 @@ function ManageGate() {
 }
 
 function ManageInner({ id }: { id: string }) {
+  const { t } = useI18n();
   const [campaign, setCampaign] = useState<MyCampaign | null | undefined>(undefined);
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [contribs, setContribs] = useState<DashContribution[]>([]);
@@ -66,13 +68,13 @@ function ManageInner({ id }: { id: string }) {
   }, [reload]);
 
   if (campaign === undefined) {
-    return <div className="container-content py-16 text-inkMuted">Učitavam…</div>;
+    return <div className="container-content py-16 text-inkMuted">{t("common.loading")}</div>;
   }
   if (campaign === null) {
     return (
       <div className="container-content py-16">
-        <p className="text-inkMuted">Kampanja nije pronađena.</p>
-        <Link href="/dashboard" className="text-coral hover:underline">← Natrag</Link>
+        <p className="text-inkMuted">{t("campaign.notFound")}</p>
+        <Link href="/dashboard" className="text-coral hover:underline">← {t("common.back")}</Link>
       </div>
     );
   }
@@ -84,19 +86,21 @@ function ManageInner({ id }: { id: string }) {
 
   return (
     <div className="container-content py-12">
-      <Link href="/dashboard" className="text-sm text-inkMuted hover:text-ink">← Moje kampanje</Link>
+      <Link href="/dashboard" className="text-sm text-inkMuted hover:text-ink">← {t("common.myCampaigns")}</Link>
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-display-md font-display font-semibold">{campaign.title}</h1>
           <p className="mt-1 text-sm text-inkMuted">
-            /{campaign.slug} · stanje: <strong>{campaign.state}</strong> ·{" "}
-            {fmtEur(campaign.total_raised_cents)} € · {campaign.contributor_count} podržavatelja{" "}
+            /{campaign.slug} · {t("manage.stateLabel")}{" "}
+            <strong>{t(`states.${campaign.state}`)}</strong> ·{" "}
+            {fmtEur(campaign.total_raised_cents)} € ·{" "}
+            {t("units.supporters", { count: campaign.contributor_count })}{" "}
             {campaign.visibility === "public" && campaign.state !== "draft" ? (
               <>
                 ·{" "}
                 <Link href={`/c?slug=${campaign.slug}`} className="text-coral hover:underline" target="_blank">
-                  javna stranica ↗
+                  {t("manage.publicPage")}
                 </Link>
               </>
             ) : null}
@@ -104,12 +108,12 @@ function ManageInner({ id }: { id: string }) {
         </div>
         <div className="flex gap-2">
           {campaign.state === "draft" || campaign.state === "closed" ? (
-            <Button size="sm" onClick={() => setState("active")}>Aktiviraj</Button>
+            <Button size="sm" onClick={() => setState("active")}>{t("manage.activate")}</Button>
           ) : null}
           {campaign.state === "active" ? (
             <>
-              <Button size="sm" variant="outline" onClick={() => setState("draft")}>Pauziraj</Button>
-              <Button size="sm" variant="outline" onClick={() => setState("closed")}>Zatvori</Button>
+              <Button size="sm" variant="outline" onClick={() => setState("draft")}>{t("manage.pause")}</Button>
+              <Button size="sm" variant="outline" onClick={() => setState("closed")}>{t("manage.close")}</Button>
             </>
           ) : null}
         </div>
@@ -117,10 +121,10 @@ function ManageInner({ id }: { id: string }) {
 
       <div className="mt-8 flex gap-1 border-b border-ink/8">
         {([
-          ["edit", "Uredi"],
-          ["tiers", `Nagrade (${tiers.length})`],
-          ["contributions", `Doprinosi (${contribs.length})`],
-          ["payouts", `Isplate (${payouts.length})`],
+          ["edit", t("manage.tabs.edit")],
+          ["tiers", `${t("manage.tabs.tiers")} (${tiers.length})`],
+          ["contributions", `${t("manage.tabs.contributions")} (${contribs.length})`],
+          ["payouts", `${t("manage.tabs.payouts")} (${payouts.length})`],
         ] as const).map(([key, label]) => (
           <button
             key={key}
@@ -141,7 +145,7 @@ function ManageInner({ id }: { id: string }) {
         {tab === "edit" ? (
           <div className="max-w-2xl card-base">
             <CampaignForm
-              submitLabel="Spremi promjene"
+              submitLabel={t("manage.saveChanges")}
               initial={{
                 title: campaign.title,
                 type: campaign.type,
@@ -192,6 +196,7 @@ function TiersTab({
   tiers: Tier[];
   onChange: () => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [price, setPrice] = useState("");
   const [kind, setKind] = useState("reward");
@@ -220,20 +225,20 @@ function TiersTab({
   return (
     <div className="max-w-2xl space-y-6">
       {tiers.length === 0 ? (
-        <p className="text-inkMuted">Nema nagrada/razina.</p>
+        <p className="text-inkMuted">{t("manage.tiers.empty")}</p>
       ) : (
         <ul className="space-y-2">
-          {tiers.map((t) => (
-            <li key={t.id} className="card-base flex items-center justify-between !py-3">
+          {tiers.map((tier) => (
+            <li key={tier.id} className="card-base flex items-center justify-between !py-3">
               <div>
-                <p className="font-medium">{t.title} <span className="text-xs text-inkMuted">({t.kind})</span></p>
+                <p className="font-medium">{tier.title} <span className="text-xs text-inkMuted">({tier.kind})</span></p>
                 <p className="text-xs text-inkMuted">
-                  {fmtEur(t.price_cents)} €
-                  {t.inventory_total !== null ? ` · ${t.inventory_claimed}/${t.inventory_total}` : ""}
+                  {fmtEur(tier.price_cents)} €
+                  {tier.inventory_total !== null ? ` · ${tier.inventory_claimed}/${tier.inventory_total}` : ""}
                 </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={async () => { await deleteTier(t.id); onChange(); }}>
-                Obriši
+              <Button variant="ghost" size="sm" onClick={async () => { await deleteTier(tier.id); onChange(); }}>
+                {t("manage.tiers.delete")}
               </Button>
             </li>
           ))}
@@ -241,16 +246,16 @@ function TiersTab({
       )}
 
       <form onSubmit={add} className="card-base grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <input className="rounded-lg border border-ink/15 px-3 py-2 text-sm sm:col-span-2" placeholder="Naziv nagrade" value={title} onChange={(e) => setTitle(e.target.value)} />
+        <input className="rounded-lg border border-ink/15 px-3 py-2 text-sm sm:col-span-2" placeholder={t("manage.tiers.namePlaceholder")} value={title} onChange={(e) => setTitle(e.target.value)} />
         <select className="rounded-lg border border-ink/15 px-3 py-2 text-sm" value={kind} onChange={(e) => setKind(e.target.value)}>
-          <option value="reward">Nagrada</option>
-          <option value="ticket">Ulaznica</option>
-          <option value="token_tranche">Token tranša</option>
-          <option value="none">Bez</option>
+          <option value="reward">{t("manage.tiers.kinds.reward")}</option>
+          <option value="ticket">{t("manage.tiers.kinds.ticket")}</option>
+          <option value="token_tranche">{t("manage.tiers.kinds.token_tranche")}</option>
+          <option value="none">{t("manage.tiers.kinds.none")}</option>
         </select>
-        <input className="rounded-lg border border-ink/15 px-3 py-2 text-sm" inputMode="decimal" placeholder="Cijena €" value={price} onChange={(e) => setPrice(e.target.value)} />
-        <input className="rounded-lg border border-ink/15 px-3 py-2 text-sm" inputMode="numeric" placeholder="Zaliha (prazno = ∞)" value={inv} onChange={(e) => setInv(e.target.value)} />
-        <Button type="submit" disabled={busy} size="sm">Dodaj nagradu</Button>
+        <input className="rounded-lg border border-ink/15 px-3 py-2 text-sm" inputMode="decimal" placeholder={t("manage.tiers.pricePlaceholder")} value={price} onChange={(e) => setPrice(e.target.value)} />
+        <input className="rounded-lg border border-ink/15 px-3 py-2 text-sm" inputMode="numeric" placeholder={t("manage.tiers.stockPlaceholder")} value={inv} onChange={(e) => setInv(e.target.value)} />
+        <Button type="submit" disabled={busy} size="sm">{t("manage.tiers.add")}</Button>
       </form>
     </div>
   );
@@ -263,8 +268,9 @@ function ContributionsTab({
   rows: DashContribution[];
   onChange: () => void;
 }) {
+  const { t, locale } = useI18n();
   const [busyId, setBusyId] = useState<string | null>(null);
-  if (rows.length === 0) return <p className="text-inkMuted">Još nema doprinosa.</p>;
+  if (rows.length === 0) return <p className="text-inkMuted">{t("manage.contribs.empty")}</p>;
 
   async function toggleHidden(r: DashContribution) {
     setBusyId(r.id);
@@ -283,17 +289,17 @@ function ContributionsTab({
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-ink/8 text-left text-inkMuted">
-            <th className="py-2 pr-4 font-medium">Datum</th>
-            <th className="py-2 pr-4 font-medium">Ime</th>
-            <th className="py-2 pr-4 font-medium">Iznos</th>
-            <th className="py-2 pr-4 font-medium">Stanje</th>
-            <th className="py-2 font-medium">Poruka (zid)</th>
+            <th className="py-2 pr-4 font-medium">{t("manage.contribs.cols.date")}</th>
+            <th className="py-2 pr-4 font-medium">{t("manage.contribs.cols.name")}</th>
+            <th className="py-2 pr-4 font-medium">{t("manage.contribs.cols.amount")}</th>
+            <th className="py-2 pr-4 font-medium">{t("manage.contribs.cols.state")}</th>
+            <th className="py-2 font-medium">{t("manage.contribs.cols.message")}</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r) => (
             <tr key={r.id} className="border-b border-ink/5 align-top">
-              <td className="py-2 pr-4 whitespace-nowrap">{new Date(r.created_at).toLocaleDateString("hr")}</td>
+              <td className="py-2 pr-4 whitespace-nowrap">{new Date(r.created_at).toLocaleDateString(locale)}</td>
               <td className="py-2 pr-4">{r.display_name?.trim() || "—"}</td>
               <td className="py-2 pr-4 whitespace-nowrap">{fmtEur(r.amount_received_cents ?? r.amount_cents)} €</td>
               <td className="py-2 pr-4">{r.state}</td>
@@ -314,7 +320,7 @@ function ContributionsTab({
                       disabled={busyId === r.id}
                       className="shrink-0 rounded-full border border-ink/15 px-2 py-0.5 text-xs hover:border-ink/30 disabled:opacity-50"
                     >
-                      {busyId === r.id ? "…" : r.message_hidden ? "Prikaži" : "Sakrij"}
+                      {busyId === r.id ? "…" : r.message_hidden ? t("manage.contribs.show") : t("manage.contribs.hide")}
                     </button>
                   </div>
                 ) : (
@@ -330,14 +336,12 @@ function ContributionsTab({
 }
 
 function PayoutsTab({ rows }: { rows: Payout[] }) {
+  const { t } = useI18n();
   return (
     <div className="max-w-2xl space-y-4">
-      <p className="text-sm text-inkMuted">
-        EURe stiže izravno na odredišni Safe kampanje. Isplata (Monerium redeem u
-        SEPA) pokreće se preko Safe-a / ops procesa — ovdje je povijest.
-      </p>
+      <p className="text-sm text-inkMuted">{t("manage.payouts.intro")}</p>
       {rows.length === 0 ? (
-        <p className="text-inkMuted">Nema zabilježenih isplata.</p>
+        <p className="text-inkMuted">{t("manage.payouts.empty")}</p>
       ) : (
         <ul className="space-y-2">
           {rows.map((p) => (

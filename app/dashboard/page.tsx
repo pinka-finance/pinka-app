@@ -5,6 +5,7 @@ import Link from "next/link";
 import { AuthGate, useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { fmtEur } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 import {
   getMyAccountId,
   listMyCampaigns,
@@ -20,6 +21,7 @@ export default function DashboardPage() {
 }
 
 function DashboardInner() {
+  const { t } = useI18n();
   const { user, signOut } = useAuth();
   const [campaigns, setCampaigns] = useState<MyCampaign[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -35,7 +37,7 @@ function DashboardInner() {
         setCampaigns(await listMyCampaigns(acct));
       } catch (e) {
         console.error(e);
-        setError("Učitavanje kampanja nije uspjelo.");
+        setError("dashboard.loadFailed");
       }
     })();
   }, []);
@@ -44,26 +46,26 @@ function DashboardInner() {
     <div className="container-content py-12">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-display-md font-display font-semibold">Moje kampanje</h1>
+          <h1 className="text-display-md font-display font-semibold">{t("dashboard.title")}</h1>
           <p className="mt-1 text-sm text-inkMuted">{user?.email}</p>
         </div>
         <div className="flex items-center gap-3">
           <Button asChild>
-            <Link href="/dashboard/new">Nova kampanja</Link>
+            <Link href="/dashboard/new">{t("dashboard.newCampaign")}</Link>
           </Button>
           <Button variant="ghost" size="sm" onClick={() => signOut()}>
-            Odjava
+            {t("dashboard.signOut")}
           </Button>
         </div>
       </div>
 
-      {error ? <p className="mt-8 text-rust">{error}</p> : null}
+      {error ? <p className="mt-8 text-rust">{t(error)}</p> : null}
 
       {campaigns === null ? (
-        <p className="mt-12 text-inkMuted">Učitavam…</p>
+        <p className="mt-12 text-inkMuted">{t("common.loading")}</p>
       ) : campaigns.length === 0 ? (
         <div className="mt-12 card-base text-center text-inkMuted">
-          Još nemaš kampanja. Kreiraj prvu.
+          {t("dashboard.empty")}
         </div>
       ) : (
         <div className="mt-10 space-y-3">
@@ -82,7 +84,7 @@ function DashboardInner() {
               <div className="text-right text-sm">
                 <p className="font-semibold">{fmtEur(c.total_raised_cents)} €</p>
                 <p className="text-xs text-inkMuted">
-                  {c.contributor_count} podržavatelja
+                  {t("units.supporters", { count: c.contributor_count })}
                 </p>
               </div>
             </Link>
@@ -94,12 +96,11 @@ function DashboardInner() {
 }
 
 function StateBadge({ state }: { state: string }) {
-  const map: Record<string, string> = {
-    draft: "nacrt",
-    active: "aktivna",
-    funded: "ispunjena",
-    closed: "zatvorena",
-    cancelled: "otkazana",
-  };
-  return <span className="text-coral-700">{map[state] ?? state}</span>;
+  const { t } = useI18n();
+  const known = ["draft", "active", "funded", "closed", "cancelled"];
+  return (
+    <span className="text-coral-700">
+      {known.includes(state) ? t(`states.${state}`) : state}
+    </span>
+  );
 }

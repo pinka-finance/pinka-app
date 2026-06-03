@@ -49,6 +49,8 @@ export interface PublicContribution {
   link_preview: LinkPreview | null;
   amount_cents: number;
   created_at: string;
+  // true → contributor was Certilia/eID verified at payment time (implicit KYC).
+  verified: boolean;
 }
 
 const CAMPAIGN_SELECT =
@@ -123,7 +125,7 @@ export async function listCampaignContributions(
   const { data, error } = await sb
     .schema("pinka_finance")
     .from("public_contributions")
-    .select("id, display_name, message, link_preview, amount_cents, created_at")
+    .select("id, display_name, message, link_preview, amount_cents, created_at, verified")
     .eq("campaign_id", campaignId)
     .order("amount_cents", { ascending: false })
     .limit(50);
