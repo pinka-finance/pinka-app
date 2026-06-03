@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces } from "next/font/google";
-import Link from "next/link";
-import { Logo } from "@/components/logo";
 import { AuthProvider } from "@/lib/auth";
+import { I18nProvider } from "@/lib/i18n";
+import { SiteHeader } from "@/components/site-header";
+import { SiteFooter } from "@/components/site-footer";
 import "./globals.css";
 
 const inter = Inter({
@@ -51,34 +52,13 @@ export default function RootLayout({
   return (
     <html lang="hr" className={`${inter.variable} ${fraunces.variable}`}>
       <body>
-        <header className="border-b border-ink/8">
-          <div className="container-content flex h-16 items-center justify-between">
-            <Link href="/" aria-label="pinka — naslovnica">
-              <Logo />
-            </Link>
-            <nav className="flex items-center gap-6 text-sm text-inkMuted">
-              <Link href="/" className="hover:text-ink">Kampanje</Link>
-              <Link href="/dashboard" className="hover:text-ink">Za kreatore</Link>
-              <a
-                href="https://pinka.finance"
-                className="hover:text-ink"
-                target="_blank"
-                rel="noreferrer"
-              >
-                O projektu
-              </a>
-            </nav>
-          </div>
-        </header>
-        <main id="main">
-          <AuthProvider>{children}</AuthProvider>
-        </main>
-        <footer className="mt-24 border-t border-ink/8">
-          <div className="container-content flex h-20 items-center justify-between text-sm text-inkMuted">
-            <span>© pinka.finance</span>
-            <span>SEPA Instant · Monerium EURe · Gnosis</span>
-          </div>
-        </footer>
+        <I18nProvider>
+          <AuthProvider>
+            <SiteHeader />
+            <main id="main">{children}</main>
+            <SiteFooter />
+          </AuthProvider>
+        </I18nProvider>
       </body>
     </html>
   );

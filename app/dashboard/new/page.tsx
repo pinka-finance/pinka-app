@@ -10,6 +10,7 @@ import { CampaignForm } from "@/components/dashboard/campaign-form";
 import { createCampaign, getMyAccountId } from "@/lib/dashboard";
 import { connectWallet } from "@/lib/chain/walletSdk";
 import { deriveCampaignSafeFromSigner, type CampaignSafe } from "@/lib/chain/safe";
+import { useI18n, Rich } from "@/lib/i18n";
 
 export default function NewCampaignPage() {
   return (
@@ -20,6 +21,7 @@ export default function NewCampaignPage() {
 }
 
 function NewInner() {
+  const { t } = useI18n();
   const router = useRouter();
   const [draftId] = useState(() => crypto.randomUUID());
   const [ecosystemSafe, setEcosystemSafe] = useState<`0x${string}` | null>(null);
@@ -36,7 +38,7 @@ function NewInner() {
       setSafe(await deriveCampaignSafeFromSigner(signerAddress, draftId));
     } catch (e) {
       console.error(e);
-      setError("Povezivanje s DOMOVINA walletom nije uspjelo (otkazano ili blokirano).");
+      setError(t("dashboardNew.connectFailed"));
     } finally {
       setConnecting(false);
     }
@@ -45,45 +47,39 @@ function NewInner() {
   return (
     <div className="container-content max-w-4xl py-12">
       <Link href="/dashboard" className="text-sm text-inkMuted hover:text-ink">
-        ← Natrag
+        ← {t("common.back")}
       </Link>
-      <h1 className="mt-3 text-display-md font-display font-semibold">Nova kampanja</h1>
+      <h1 className="mt-3 text-display-md font-display font-semibold">{t("dashboardNew.title")}</h1>
       <p className="mt-2 text-sm text-inkMuted">
-        Dva koraka: prvo poveži <strong>DOMOVINA wallet</strong> (novčanik kampanje),
-        zatim detalji. Kampanja se kreira kao <strong>nacrt</strong> i ne prima uplate
-        dok je ne aktiviraš.
+        <Rich>{t("dashboardNew.intro")}</Rich>
       </p>
 
       {/* Korak 1 — ecosystem wallet + per-campaign Safe */}
       <div className="mt-8 card-base">
         <h2 className="flex items-center gap-2 font-display font-semibold">
-          <ShieldCheck className="h-5 w-5 text-coral" /> 1. Novčanik kampanje
+          <ShieldCheck className="h-5 w-5 text-coral" /> {t("dashboardNew.step1Title")}
         </h2>
         <p className="mt-2 text-sm leading-relaxed text-inkMuted">
-          Poveži svoj <strong>DOMOVINA wallet</strong> — isti passkey-identitet koji koristiš
-          na domovina.ai i drugim aplikacijama ekosustava. Iz njega izvodimo <strong>vlastiti
-          Safe za ovu kampanju</strong> (donacije stižu odvojeno po kampanji), a kontrolu nad
-          svime imaš ti, jednim passkeyem.
+          <Rich>{t("dashboardNew.step1Desc")}</Rich>
         </p>
 
         {!safe ? (
           <Button onClick={connect} disabled={connecting} className="mt-4">
             {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
-            {connecting ? "Otvaram wallet…" : "Poveži DOMOVINA wallet"}
+            {connecting ? t("dashboardNew.openingWallet") : t("dashboardNew.connectWallet")}
           </Button>
         ) : (
           <dl className="mt-4 space-y-2 text-xs">
             <div>
-              <dt className="text-inkMuted">Tvoj ekosustav-wallet (zajednički identitet)</dt>
+              <dt className="text-inkMuted">{t("dashboardNew.ecosystemWalletLabel")}</dt>
               <dd className="break-all font-mono">{ecosystemSafe}</dd>
             </div>
             <div>
-              <dt className="text-inkMuted">Safe ove kampanje — ovamo stižu donacije</dt>
+              <dt className="text-inkMuted">{t("dashboardNew.campaignSafeLabel")}</dt>
               <dd className="break-all font-mono text-coral-700">{safe.safeAddress}</dd>
             </div>
             <p className="pt-1 leading-relaxed text-inkMuted">
-              <strong>Counterfactual</strong>: adresa već prima EURe; sam Safe se na lancu kreira
-              tek pri prvoj isplati (bez gasa unaprijed). Vlasnik: tvoj ekosustav-passkey.
+              <Rich>{t("dashboardNew.counterfactualNote")}</Rich>
             </p>
           </dl>
         )}
@@ -91,10 +87,10 @@ function NewInner() {
 
       {/* Korak 2 — detalji */}
       <div className="mt-6 card-base">
-        <h2 className="font-display font-semibold">2. Detalji kampanje</h2>
+        <h2 className="font-display font-semibold">{t("dashboardNew.step2Title")}</h2>
         <div className="mt-2">
           <CampaignForm
-            submitLabel="Kreiraj kampanju"
+            submitLabel={t("dashboardNew.createCampaign")}
             lockedDestination={safe?.safeAddress ?? null}
             onSubmit={async (v) => {
               if (!safe) throw new Error("safe_not_ready");

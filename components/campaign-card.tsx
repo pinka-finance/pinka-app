@@ -1,8 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import type { Campaign } from "@/lib/pinka";
 import { fmtEur } from "@/lib/format";
+import { useI18n } from "@/lib/i18n";
 
 export function CampaignCard({ campaign }: { campaign: Campaign }) {
+  const { t } = useI18n();
   const { stats, goal_cents } = campaign;
   const pct =
     goal_cents && goal_cents > 0
@@ -39,14 +43,15 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
             <div className="h-full bg-coral" style={{ width: `${pct}%` }} />
           </div>
           <p className="mt-2 text-xs text-inkMuted">
-            {fmtEur(stats.total_raised_cents)} € od {fmtEur(goal_cents!)} € ·{" "}
-            {stats.contributor_count} podržavatelja
+            {fmtEur(stats.total_raised_cents)} €{" "}
+            {t("card.ofGoal", { goal: fmtEur(goal_cents!) })} ·{" "}
+            {t("units.supporters", { count: stats.contributor_count })}
           </p>
         </>
       ) : (
         <p className="mt-4 text-xs text-inkMuted">
-          Prikupljeno {fmtEur(stats.total_raised_cents)} € ·{" "}
-          {stats.contributor_count} podržavatelja
+          {t("card.collected", { amount: fmtEur(stats.total_raised_cents) })} ·{" "}
+          {t("units.supporters", { count: stats.contributor_count })}
         </p>
       )}
     </Link>
