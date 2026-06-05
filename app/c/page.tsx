@@ -3,7 +3,7 @@
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ShieldCheck, Landmark } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import {
   getCampaignBySlug,
   listCampaignContributions,
@@ -31,7 +31,13 @@ export default function CampaignPage() {
 
 function CampaignInner() {
   const { t } = useI18n();
-  const slug = useSearchParams().get("slug") ?? "";
+  // Pretty URL: /c/{slug} (route param). Backward-compat: /c?slug={slug}.
+  // CF Pages servira out/c.html za /c/* (vidi public/_redirects), pa slug
+  // čitamo iz pathname-a, a query je fallback za stare linkove.
+  const search = useSearchParams();
+  const pathname = usePathname();
+  const pathSlug = pathname?.match(/^\/c\/(.+?)\/?$/)?.[1];
+  const slug = pathSlug ? decodeURIComponent(pathSlug) : (search.get("slug") ?? "");
   const [campaign, setCampaign] = useState<Campaign | null | undefined>(undefined);
   const [contributions, setContributions] = useState<PublicContribution[]>([]);
   // ids that just arrived → play the wall "arrive" animation once
@@ -159,26 +165,40 @@ function CampaignInner() {
                         <Linkify text={c.message} />
                       </p>
                     ) : null}
-                    {c.link_preview && (c.link_preview.title || c.link_preview.description) ? (
+                    {c.link_preview &&
+                    (c.link_preview.title ||
+                      c.link_preview.description ||
+                      c.link_preview.image) ? (
                       <a
                         href={c.link_preview.url}
                         target="_blank"
                         rel="nofollow noopener noreferrer"
-                        className="mt-2 block rounded-lg border border-ink/10 bg-white/70 p-3 transition-colors hover:border-coral/40"
+                        className="mt-2 block overflow-hidden rounded-lg border border-ink/10 bg-white/70 transition-colors hover:border-coral/40"
                       >
-                        <p className="text-[11px] uppercase tracking-wide text-inkMuted">
-                          {c.link_preview.siteName ?? t("campaign.linkFallback")} ↗
-                        </p>
-                        {c.link_preview.title ? (
-                          <p className="mt-0.5 line-clamp-2 text-sm font-medium text-ink">
-                            {c.link_preview.title}
-                          </p>
+                        {c.link_preview.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={c.link_preview.image}
+                            alt=""
+                            loading="lazy"
+                            className="h-40 w-full object-cover"
+                          />
                         ) : null}
-                        {c.link_preview.description ? (
-                          <p className="mt-0.5 line-clamp-2 text-xs text-inkMuted">
-                            {c.link_preview.description}
+                        <div className="p-3">
+                          <p className="text-[11px] uppercase tracking-wide text-inkMuted">
+                            {c.link_preview.siteName ?? t("campaign.linkFallback")} ↗
                           </p>
-                        ) : null}
+                          {c.link_preview.title ? (
+                            <p className="mt-0.5 line-clamp-2 text-sm font-medium text-ink">
+                              {c.link_preview.title}
+                            </p>
+                          ) : null}
+                          {c.link_preview.description ? (
+                            <p className="mt-0.5 line-clamp-2 text-xs text-inkMuted">
+                              {c.link_preview.description}
+                            </p>
+                          ) : null}
+                        </div>
                       </a>
                     ) : null}
                   </li>

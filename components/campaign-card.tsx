@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { Campaign } from "@/lib/pinka";
 import { fmtEur } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
@@ -14,8 +13,8 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
       : null;
 
   return (
-    <Link
-      href={`/c?slug=${campaign.slug}`}
+    <a
+      href={`/c/${campaign.slug}`}
       className="card-base block hover:-translate-y-0.5 hover:shadow-lift"
     >
       {campaign.cover_image_url ? (
@@ -54,6 +53,6 @@ export function CampaignCard({ campaign }: { campaign: Campaign }) {
           {t("units.supporters", { count: stats.contributor_count })}
         </p>
       )}
-    </Link>
+    </a>
   );
 }

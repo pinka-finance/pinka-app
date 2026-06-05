@@ -111,7 +111,7 @@ function ManageInner({ id }: { id: string }) {
             {campaign.visibility === "public" && campaign.state !== "draft" ? (
               <>
                 ·{" "}
-                <Link href={`/c?slug=${campaign.slug}`} className="text-coral hover:underline" target="_blank">
+                <Link href={`/c/${campaign.slug}`} className="text-coral hover:underline" target="_blank">
                   {t("manage.publicPage")}
                 </Link>
               </>
