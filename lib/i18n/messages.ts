@@ -305,6 +305,14 @@ const hr = {
     pause: "Pauziraj",
     close: "Zatvori",
     saveChanges: "Spremi promjene",
+    safe: {
+      title: "Safe kampanje (custody)",
+      set: "Odredišni Safe za ovu kampanju. Donacije idu na ovu adresu.",
+      unset:
+        "Safe još nije postavljen. Deriviraj ga iz svog passkey-a PRIJE objave — inače donacije idu na praznu adresu.",
+      derive: "Deriviraj Safe iz passkey-a",
+      rederive: "Ponovno deriviraj Safe",
+    },
     tabs: {
       edit: "Uredi",
       tiers: "Nagrade",
@@ -637,6 +645,14 @@ const en: Messages = {
     pause: "Pause",
     close: "Close",
     saveChanges: "Save changes",
+    safe: {
+      title: "Campaign Safe (custody)",
+      set: "Destination Safe for this campaign. Donations go to this address.",
+      unset:
+        "Safe is not set yet. Derive it from your passkey BEFORE publishing — otherwise donations go to an empty address.",
+      derive: "Derive Safe from passkey",
+      rederive: "Re-derive Safe",
+    },
     tabs: {
       edit: "Edit",
       tiers: "Rewards",

@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import {
   getMyCampaign,
   updateCampaign,
+  setCampaignSafe,
   listTiers,
   createTier,
   deleteTier,
@@ -22,6 +23,10 @@ import {
   type DashContribution,
   type Payout,
 } from "@/lib/dashboard";
+import { connectWallet } from "@/lib/chain/walletSdk";
+import { deriveCampaignSafeFromSigner } from "@/lib/chain/safe";
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 export default function ManageCampaignPage() {
   return (
@@ -143,7 +148,13 @@ function ManageInner({ id }: { id: string }) {
 
       <div className="mt-8">
         {tab === "edit" ? (
-          <div className="max-w-2xl card-base">
+          <div className="max-w-2xl space-y-6">
+            <SafeDerivePanel
+              campaignId={id}
+              destination={campaign.destination_address}
+              onDerived={reload}
+            />
+            <div className="card-base">
             <CampaignForm
               submitLabel={t("manage.saveChanges")}
               initial={{
@@ -172,6 +183,7 @@ function ManageInner({ id }: { id: string }) {
                 reload();
               }}
             />
+            </div>
           </div>
         ) : null}
 
@@ -182,6 +194,82 @@ function ManageInner({ id }: { id: string }) {
         {tab === "contributions" ? <ContributionsTab rows={contribs} onChange={reload} /> : null}
 
         {tab === "payouts" ? <PayoutsTab rows={payouts} /> : null}
+      </div>
+    </div>
+  );
+}
+
+// Derivira per-campaign Gnosis Safe iz korisnikovog passkey signera (Google/Apple
+// preko DOMOVINA Wallet SDK-a) i upiše ga kao destination_address. Safe je
+// deterministički iz campaign.id (salt = keccak256("pinka:campaign:{id}")), pa se
+// poklapa s onim što relay kasnije deploya. Jedini client-side dio cijelog flowa.
+function SafeDerivePanel({
+  campaignId,
+  destination,
+  onDerived,
+}: {
+  campaignId: string;
+  destination: string;
+  onDerived: () => void;
+}) {
+  const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [signer, setSigner] = useState<string | null>(null);
+
+  const isSet =
+    !!destination && destination.toLowerCase() !== ZERO_ADDRESS && destination !== "";
+
+  async function derive() {
+    setBusy(true);
+    setErr(null);
+    try {
+      const wallet = await connectWallet(); // passkey → ecosystem signer
+      const safe = await deriveCampaignSafeFromSigner(
+        wallet.signerAddress,
+        campaignId,
+      );
+      await setCampaignSafe(campaignId, safe.safeAddress, {
+        signer_address: safe.signerAddress,
+        salt_nonce: safe.saltNonce,
+        safe_version: "1.4.1",
+        source: "dashboard-derive",
+      });
+      setSigner(safe.signerAddress);
+      onDerived();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className={"card-base " + (isSet ? "" : "border-amber-400 bg-amber-50/40")}>
+      <h3 className="font-medium">{t("manage.safe.title")}</h3>
+      <p className="mt-1 text-sm text-inkMuted">
+        {isSet ? t("manage.safe.set") : t("manage.safe.unset")}
+      </p>
+
+      <div className="mt-3 break-all font-mono text-xs">
+        {isSet ? destination : "0x0000…0000 (placeholder)"}
+      </div>
+
+      {err ? <p className="mt-2 text-sm text-red-600">{err}</p> : null}
+      {signer ? (
+        <p className="mt-2 text-xs text-inkMuted">
+          signer: <span className="font-mono">{signer}</span>
+        </p>
+      ) : null}
+
+      <div className="mt-4">
+        <Button size="sm" onClick={derive} disabled={busy}>
+          {busy
+            ? t("common.loading")
+            : isSet
+              ? t("manage.safe.rederive")
+              : t("manage.safe.derive")}
+        </Button>
       </div>
     </div>
   );

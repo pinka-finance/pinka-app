@@ -184,6 +184,7 @@ export async function updateCampaign(
     visibility: string;
     state: string;
     cover_image_url: string | null;
+    metadata: Record<string, unknown>;
   }>,
 ): Promise<void> {
   const sb = supabaseBrowser();
@@ -191,6 +192,34 @@ export async function updateCampaign(
     .schema("pinka_finance")
     .from("campaigns")
     .update(patch)
+    .eq("id", id);
+  if (error) throw error;
+}
+
+// Postavi per-campaign Safe na postojeću kampanju: upiše destination_address i
+// spoji safe metadata u postojeći metadata (ne kloberira yield itd.). Adresa se
+// derivira client-side iz passkey signera (vidi lib/chain/safe.ts) — jedini dio
+// koji mora ostati u browseru (passkey ↔ Google/Apple).
+export async function setCampaignSafe(
+  id: string,
+  destinationAddress: string,
+  safeMeta: Record<string, unknown>,
+): Promise<void> {
+  const sb = supabaseBrowser();
+  const { data: cur } = await sb
+    .schema("pinka_finance")
+    .from("campaigns")
+    .select("metadata")
+    .eq("id", id)
+    .maybeSingle();
+  const existing = (cur?.metadata as Record<string, unknown> | null) ?? {};
+  const { error } = await sb
+    .schema("pinka_finance")
+    .from("campaigns")
+    .update({
+      destination_address: destinationAddress,
+      metadata: { ...existing, safe: safeMeta },
+    })
     .eq("id", id);
   if (error) throw error;
 }
