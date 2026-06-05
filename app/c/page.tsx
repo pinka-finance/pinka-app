@@ -181,7 +181,9 @@ function CampaignInner() {
                             src={c.link_preview.image}
                             alt=""
                             loading="lazy"
-                            className="h-40 w-full object-cover"
+                            // Prikaži u stvarnom omjeru dobivenog og:image-a
+                            // (bez fiksne visine/cropa). object-contain čuva omjer.
+                            className="w-full h-auto object-contain"
                           />
                         ) : null}
                         <div className="p-3">
