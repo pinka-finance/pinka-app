@@ -1,4 +1,5 @@
 # Cloudflare Pages rewrites (kopira se u out/ pri next exportu).
-# Pretty URL za kampanje: /c/{slug} servira static c.html (SPA), slug se čita
+# Pretty URL za kampanje: /c/{slug} servira static /c stranicu (SPA), slug se čita
 # client-side iz pathname-a (app/c/page.tsx). 200 = rewrite (URL ostaje /c/{slug}).
-/c/*  /c.html  200
+# Destinacija je BEZ .html — inače CF kanonizira .html→/c i pretvori rewrite u 308.
+/c/*  /c  200
