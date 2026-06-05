@@ -3,23 +3,29 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Copy, CheckCircle2, Loader2, QrCode } from "lucide-react";
+import { fmtEur, parseEurToCents } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
 
 // Permanent, reusable campaign QR — one QR, many payments, each recorded as a
-// distinct contribution. Two rails:
-//   • On-chain: amountless EIP-681 to the campaign Safe. The on-chain indexer
-//     already credits every EURe Transfer to the Safe as its own contribution.
-//   • SEPA: the rail's `cmp:` protocol — a blank-amount EPC QR whose remittance
-//     encodes cmp:0x<safe>?id=<campaignId>; each Monerium order → one
-//     contribution (see pinka-onchain-receipts-tokenization-plan.md).
+// distinct contribution. The amount is OPTIONAL: blank = free choice, or a
+// prefilled value (e.g. €10 donation / €15 membership) that the payer can still
+// override. Either way the SAME cmp: reference + Safe is used, and the actual
+// settled amount is what gets recorded — the QR amount is only a prefill.
+//   • On-chain: EIP-681 to the campaign Safe (amountless or with uint256 wei).
+//   • SEPA: rail `cmp:` protocol — EPC with blank or prefilled amount; memo
+//     cmp:0x<safe>?id=<campaignId> (see pinka-onchain-receipts-tokenization-plan.md).
 
 const EURE_GNOSIS_V2 = "0x420CA0f9B9b604cE0fd9C18EF134C705e5Fa3430";
 const GNOSIS_CHAIN_ID = 100;
 const RAIL_URL = process.env.NEXT_PUBLIC_RAIL_URL ?? "https://mpt.domovina.ai";
+const PRESETS = [500, 1000, 1500]; // €5 / €10 / €15
 
-// Amountless EIP-681 — the same QR works for any amount (wallet prompts).
-function eip681Permanent(destination: string): string {
-  return `ethereum:${EURE_GNOSIS_V2}@${GNOSIS_CHAIN_ID}/transfer?address=${destination}`;
+// EIP-681 — amountless (payer enters) or with a uint256 wei prefill.
+function eip681Permanent(destination: string, amountCents: number | null): string {
+  const base = `ethereum:${EURE_GNOSIS_V2}@${GNOSIS_CHAIN_ID}/transfer?address=${destination}`;
+  if (!amountCents) return base;
+  const wei = (BigInt(amountCents) * 10n ** 16n).toString();
+  return `${base}&uint256=${wei}`;
 }
 
 interface CampaignQr {
@@ -38,13 +44,18 @@ export function PermanentQr({
 }) {
   const { t } = useI18n();
   const [tab, setTab] = useState<"sepa" | "onchain">("sepa");
+  // null = free choice (blank amount); a number = prefilled (overridable).
+  const [amountCents, setAmountCents] = useState<number | null>(null);
+  const [custom, setCustom] = useState("");
   const [sepa, setSepa] = useState<CampaignQr | null | "error">(null);
 
   useEffect(() => {
     let alive = true;
-    const url =
+    setSepa(null);
+    let url =
       `${RAIL_URL}/api/intents/campaign-qr` +
       `?target=${encodeURIComponent(destinationAddress)}&id=${encodeURIComponent(campaignId)}`;
+    if (amountCents) url += `&amount=${(amountCents / 100).toFixed(2)}`;
     fetch(url)
       .then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status)))))
       .then((d: CampaignQr) => {
@@ -56,7 +67,21 @@ export function PermanentQr({
     return () => {
       alive = false;
     };
-  }, [campaignId, destinationAddress]);
+  }, [campaignId, destinationAddress, amountCents]);
+
+  function pickFree() {
+    setCustom("");
+    setAmountCents(null);
+  }
+  function pickPreset(cents: number) {
+    setCustom("");
+    setAmountCents(cents);
+  }
+  function onCustom(v: string) {
+    setCustom(v);
+    const c = parseEurToCents(v);
+    setAmountCents(c || null);
+  }
 
   return (
     <div className="card-base">
@@ -66,6 +91,28 @@ export function PermanentQr({
       <p className="mt-1 text-xs leading-relaxed text-inkMuted">
         {t("permanentQr.desc")}
       </p>
+
+      {/* Amount selector — applies to both rails. Free = blank/overridable. */}
+      <div className="mt-3 flex flex-wrap gap-1.5">
+        <AmtBtn active={amountCents === null && custom === ""} onClick={pickFree}>
+          {t("permanentQr.free")}
+        </AmtBtn>
+        {PRESETS.map((c) => (
+          <AmtBtn key={c} active={amountCents === c && custom === ""} onClick={() => pickPreset(c)}>
+            {fmtEur(c)} €
+          </AmtBtn>
+        ))}
+        <input
+          inputMode="decimal"
+          value={custom}
+          onChange={(e) => onCustom(e.target.value)}
+          placeholder={t("permanentQr.fixedAmount")}
+          className="w-24 rounded-full border border-ink/15 px-3 py-1 text-sm focus:border-ink/30 focus:outline-none"
+        />
+      </div>
+      {amountCents ? (
+        <p className="mt-1.5 text-[11px] text-inkMuted">{t("permanentQr.prefillNote")}</p>
+      ) : null}
 
       <div className="mt-3 inline-flex rounded-full border border-ink/10 p-0.5 text-sm">
         {(["sepa", "onchain"] as const).map((m) => (
@@ -115,7 +162,12 @@ export function PermanentQr({
         <div className="mt-4">
           <div className="flex justify-center">
             <div className="rounded-lg bg-white p-4 shadow-soft">
-              <QRCodeSVG value={eip681Permanent(destinationAddress)} size={300} level="M" marginSize={4} />
+              <QRCodeSVG
+                value={eip681Permanent(destinationAddress, amountCents)}
+                size={300}
+                level="M"
+                marginSize={4}
+              />
             </div>
           </div>
           <p className="mt-3 text-center text-xs text-inkMuted">
@@ -127,6 +179,29 @@ export function PermanentQr({
         </div>
       )}
     </div>
+  );
+}
+
+function AmtBtn({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={
+        "rounded-full border px-3 py-1 text-sm transition-colors " +
+        (active ? "border-coral bg-coral text-cream" : "border-ink/15 hover:border-ink/30")
+      }
+    >
+      {children}
+    </button>
   );
 }
 
