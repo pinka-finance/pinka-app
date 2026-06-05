@@ -51,6 +51,11 @@ export interface PublicContribution {
   created_at: string;
   // true → contributor was Certilia/eID verified at payment time (implicit KYC).
   verified: boolean;
+  // true → paid via SEPA by a named bank sender (bank-verified).
+  bank_verified: boolean;
+  // true → SEPA sender name matches the contributor's Certilia/eID name
+  // (independent double verification).
+  identity_double_verified: boolean;
 }
 
 const CAMPAIGN_SELECT =
@@ -125,7 +130,7 @@ export async function listCampaignContributions(
   const { data, error } = await sb
     .schema("pinka_finance")
     .from("public_contributions")
-    .select("id, display_name, message, link_preview, amount_cents, created_at, verified")
+    .select("id, display_name, message, link_preview, amount_cents, created_at, verified, bank_verified, identity_double_verified")
     .eq("campaign_id", campaignId)
     .order("amount_cents", { ascending: false })
     .limit(50);

@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ShieldCheck } from "lucide-react";
+import { ShieldCheck, Landmark } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import {
   getCampaignBySlug,
@@ -126,13 +126,29 @@ function CampaignInner() {
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 font-medium">
                         {c.display_name?.trim() || t("campaign.anonymous")}
-                        {c.verified ? (
+                        {c.identity_double_verified ? (
+                          <span
+                            title={t("campaign.doubleVerifiedTitle")}
+                            className="inline-flex items-center gap-1 rounded-full bg-teal-100 px-2 py-0.5 text-[11px] font-semibold text-teal-800"
+                          >
+                            <ShieldCheck className="h-3 w-3" />
+                            {t("campaign.doubleVerifiedBadge")}
+                          </span>
+                        ) : c.verified ? (
                           <span
                             title={t("campaign.verifiedTitle")}
                             className="inline-flex items-center gap-1 rounded-full bg-teal-50 px-2 py-0.5 text-[11px] font-medium text-teal-700"
                           >
                             <ShieldCheck className="h-3 w-3" />
                             {t("campaign.verifiedBadge")}
+                          </span>
+                        ) : c.bank_verified ? (
+                          <span
+                            title={t("campaign.bankVerifiedTitle")}
+                            className="inline-flex items-center gap-1 rounded-full bg-sand px-2 py-0.5 text-[11px] font-medium text-inkSoft"
+                          >
+                            <Landmark className="h-3 w-3" />
+                            {t("campaign.bankVerifiedBadge")}
                           </span>
                         ) : null}
                       </span>

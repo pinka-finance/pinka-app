@@ -73,6 +73,11 @@ const hr = {
     verifiedBadge: "Verificirano · eOsobna",
     verifiedTitle:
       "Identitet potvrđen hrvatskom e-osobnom (Certilia) — 100% verificirana osoba.",
+    doubleVerifiedBadge: "Dvostruko verificirano",
+    doubleVerifiedTitle:
+      "Dvostruka provjera: ime iz Certilia eID-a se podudara s imenom pošiljatelja SEPA uplate.",
+    bankVerifiedBadge: "Bankovno potvrđeno",
+    bankVerifiedTitle: "Uplaćeno SEPA-om s imenovanog bankovnog računa.",
     types: {
       donation: "Donacija",
       crowdfund: "Crowdfunding",
@@ -398,6 +403,11 @@ const en: Messages = {
     verifiedBadge: "Verified · eID",
     verifiedTitle:
       "Identity confirmed with the Croatian eID (Certilia) — a 100% verified person.",
+    doubleVerifiedBadge: "Double-verified",
+    doubleVerifiedTitle:
+      "Double check: the Certilia eID name matches the SEPA payment sender's name.",
+    bankVerifiedBadge: "Bank-verified",
+    bankVerifiedTitle: "Paid via SEPA from a named bank account.",
     types: {
       donation: "Donation",
       crowdfund: "Crowdfunding",
