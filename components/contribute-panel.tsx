@@ -9,6 +9,7 @@ import { fmtEur, parseEurToCents } from "@/lib/format";
 import { sendEure } from "@/lib/chain/walletSdk";
 import { confirmOnchain } from "@/lib/pinka";
 import { useAuth } from "@/lib/auth";
+import { displayNameMatchesIdentity } from "@/lib/name";
 import { useI18n } from "@/lib/i18n";
 
 type Phase = "idle" | "creating" | "awaiting" | "paid";
@@ -369,6 +370,15 @@ export function ContributePanel({
           placeholder={t("contribute.namePlaceholder")}
           className="w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-ink/30 focus:outline-none disabled:opacity-50"
         />
+        {verified && !anonymous ? (
+          displayNameMatchesIdentity(displayName, identity?.first_name, identity?.last_name) ? (
+            <p className="flex items-center gap-1 text-[11px] text-teal-700">
+              <ShieldCheck className="h-3 w-3" /> {t("contribute.nameMatchOk")}
+            </p>
+          ) : (
+            <p className="text-[11px] text-rust">{t("contribute.nameMatchLost")}</p>
+          )
+        ) : null}
         <div>
           <textarea
             value={message}

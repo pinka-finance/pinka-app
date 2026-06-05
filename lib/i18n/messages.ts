@@ -128,6 +128,9 @@ const hr = {
       "Prijavom hrvatskom e-osobnom (Certilia) tvoja uplata se vodi kao 100% verificirana — potvrđena osoba od Republike Hrvatske.",
     verifyOpening: "Otvaram eOsobnu…",
     verifyFailed: "Prijava eOsobnom nije uspjela ili je otkazana.",
+    nameMatchOk: "Ime se podudara s eID — donacija ostaje verificirana.",
+    nameMatchLost:
+      "Promijenjeno ime ne odgovara eID-u — donacija neće imati oznaku verificirano.",
     verifiedAs: "Verificirano kao {name} · eOsobna",
     verifiedAnon: "Verificiran identitet · eOsobna",
   },
@@ -458,6 +461,9 @@ const en: Messages = {
       "By signing in with the Croatian eID (Certilia) your payment is recorded as 100% verified — a person confirmed by the Republic of Croatia.",
     verifyOpening: "Opening eID…",
     verifyFailed: "eID sign-in failed or was cancelled.",
+    nameMatchOk: "Name matches your eID — the donation stays verified.",
+    nameMatchLost:
+      "The edited name doesn't match your eID — the donation won't be marked verified.",
     verifiedAs: "Verified as {name} · eID",
     verifiedAnon: "Verified identity · eID",
   },
