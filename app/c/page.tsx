@@ -12,6 +12,7 @@ import {
 } from "@/lib/pinka";
 import { fmtEur } from "@/lib/format";
 import { ContributePanel } from "@/components/contribute-panel";
+import { PermanentQr } from "@/components/permanent-qr";
 import { useI18n } from "@/lib/i18n";
 
 // EURe (Monerium) on Gnosis — the canonical proxy 0x420CA0f9 that the rail uses
@@ -196,6 +197,13 @@ function CampaignInner() {
             destinationAddress={campaign.destination_address}
             onPaid={refresh}
           />
+
+          {campaign.destination_address ? (
+            <PermanentQr
+              campaignId={campaign.id}
+              destinationAddress={campaign.destination_address}
+            />
+          ) : null}
 
           {campaign.destination_address ? (
             <div className="card-base">
