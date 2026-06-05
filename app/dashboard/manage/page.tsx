@@ -25,8 +25,7 @@ import {
 } from "@/lib/dashboard";
 import { connectWallet } from "@/lib/chain/walletSdk";
 import { deriveCampaignSafeFromSigner } from "@/lib/chain/safe";
-
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+import { isSafeSet } from "@/lib/chain/constants";
 
 export default function ManageCampaignPage() {
   return (
@@ -84,7 +83,15 @@ function ManageInner({ id }: { id: string }) {
     );
   }
 
+  const safeSet = isSafeSet(campaign.destination_address);
+
   async function setState(state: string) {
+    // Bez deriviranog Safe-a kampanja ne smije postati aktivna (donacije bi išle
+    // na nultu adresu i spalile se). Drži je u draftu dok Safe nije postavljen.
+    if (state === "active" && !safeSet) {
+      alert(t("manage.safe.lockHint"));
+      return;
+    }
     await updateCampaign(id, { state });
     reload();
   }
@@ -111,9 +118,17 @@ function ManageInner({ id }: { id: string }) {
             ) : null}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col items-end gap-1">
+         <div className="flex gap-2">
           {campaign.state === "draft" || campaign.state === "closed" ? (
-            <Button size="sm" onClick={() => setState("active")}>{t("manage.activate")}</Button>
+            <Button
+              size="sm"
+              onClick={() => setState("active")}
+              disabled={!safeSet}
+              title={safeSet ? undefined : t("manage.safe.lockHint")}
+            >
+              {t("manage.activate")}
+            </Button>
           ) : null}
           {campaign.state === "active" ? (
             <>
@@ -121,6 +136,10 @@ function ManageInner({ id }: { id: string }) {
               <Button size="sm" variant="outline" onClick={() => setState("closed")}>{t("manage.close")}</Button>
             </>
           ) : null}
+         </div>
+         {!safeSet && (campaign.state === "draft" || campaign.state === "closed") ? (
+           <p className="text-xs text-amber-700">{t("manage.safe.lockHint")}</p>
+         ) : null}
         </div>
       </div>
 
@@ -169,6 +188,12 @@ function ManageInner({ id }: { id: string }) {
                 visibility: campaign.visibility as "private" | "unlisted" | "public",
               }}
               onSubmit={async (v) => {
+                // Ne dopusti izlazak iz 'private' dok Safe (spremana adresa) nije
+                // postavljen — inače bi javna/aktivna kampanja primala donacije na nultu adresu.
+                if (v.visibility !== "private" && !isSafeSet(v.destinationAddress)) {
+                  alert(t("manage.safe.blockPublic"));
+                  return;
+                }
                 await updateCampaign(id, {
                   title: v.title,
                   type: v.type,
@@ -217,8 +242,7 @@ function SafeDerivePanel({
   const [err, setErr] = useState<string | null>(null);
   const [signer, setSigner] = useState<string | null>(null);
 
-  const isSet =
-    !!destination && destination.toLowerCase() !== ZERO_ADDRESS && destination !== "";
+  const isSet = isSafeSet(destination);
 
   async function derive() {
     setBusy(true);

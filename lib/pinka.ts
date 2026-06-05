@@ -1,4 +1,5 @@
 import { supabaseBrowser } from "./supabase";
+import { ZERO_ADDRESS, isSafeSet } from "./chain/constants";
 
 // Tipovi + upiti nad schemom pinka_finance. Vidi:
 //   domovina-api/docs/pinka-finance-platform-plan.md (§3 ER model)
@@ -98,13 +99,18 @@ export async function listPublicCampaigns(): Promise<Campaign[]> {
     .select(CAMPAIGN_SELECT)
     .eq("visibility", "public")
     .in("state", ["active", "funded"])
+    // Ne izlistavaj kampanje bez deriviranog Safe-a (placeholder nulta adresa) —
+    // donacije bi išle na praznu adresu. Server-side filter + client-side fallback.
+    .neq("destination_address", ZERO_ADDRESS)
     .order("created_at", { ascending: false })
     .limit(60);
   if (error) {
     console.error("[pinka] listPublicCampaigns", error.message);
     return [];
   }
-  return (data ?? []).map((r) => normalize(r as unknown as Record<string, unknown>));
+  return (data ?? [])
+    .map((r) => normalize(r as unknown as Record<string, unknown>))
+    .filter((c) => isSafeSet(c.destination_address));
 }
 
 export async function getCampaignBySlug(slug: string): Promise<Campaign | null> {

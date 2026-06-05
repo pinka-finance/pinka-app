@@ -6,6 +6,16 @@ import { defineChain } from "viem";
 
 export const GNOSIS_CHAIN_ID = 100;
 
+// Nulta adresa = placeholder za kampanju kojoj per-campaign Safe još nije
+// derivran. Kampanja s ovakvim destination_address NE smije biti aktivna/javna
+// (donacije bi se spalile), niti se smije pojaviti u javnom listanju.
+export const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+/** true ako je destination_address stvarni Safe (nije null/prazno/nulta adresa). */
+export function isSafeSet(addr: string | null | undefined): boolean {
+  return !!addr && addr.toLowerCase() !== ZERO_ADDRESS;
+}
+
 export const GNOSIS_RPC =
   process.env.NEXT_PUBLIC_GNOSIS_RPC ?? "https://rpc.gnosischain.com";
 

@@ -312,6 +312,9 @@ const hr = {
         "Safe još nije postavljen. Deriviraj ga iz svog passkey-a PRIJE objave — inače donacije idu na praznu adresu.",
       derive: "Deriviraj Safe iz passkey-a",
       rederive: "Ponovno deriviraj Safe",
+      lockHint: "Deriviraj Safe prije aktivacije ili objave kampanje.",
+      blockPublic:
+        "Kampanja ne može biti javna/nelistana dok Safe nije postavljen. Prvo deriviraj Safe, pa promijeni vidljivost.",
     },
     tabs: {
       edit: "Uredi",
@@ -652,6 +655,9 @@ const en: Messages = {
         "Safe is not set yet. Derive it from your passkey BEFORE publishing — otherwise donations go to an empty address.",
       derive: "Derive Safe from passkey",
       rederive: "Re-derive Safe",
+      lockHint: "Derive the Safe before activating or publishing the campaign.",
+      blockPublic:
+        "The campaign cannot be public/unlisted until the Safe is set. Derive the Safe first, then change visibility.",
     },
     tabs: {
       edit: "Edit",
