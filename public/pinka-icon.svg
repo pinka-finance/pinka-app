@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-label="pinka">
+  <rect width="512" height="512" rx="112" fill="#FBF8F3"/>
+  <!-- coral "p" monogram + the brand's signature coral dot (font-independent) -->
+  <text x="196" y="268" text-anchor="middle" dominant-baseline="central"
+        font-family="Inter, Helvetica, Arial, sans-serif" font-weight="700"
+        font-size="340" fill="#E85D5D">p</text>
+  <circle cx="356" cy="332" r="36" fill="#E85D5D"/>
+</svg>

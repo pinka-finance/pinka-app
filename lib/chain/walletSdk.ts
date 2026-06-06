@@ -11,6 +11,8 @@
 // ceremony under domovina.ai, so the Safe owner is shared ecosystem-wide.
 // See pay.domovina.ai/docs/plans/cross-domain-wallet-passkey.md + ADR 0009.
 
+import { getSafeContext, sendEureViaSafe } from "./safeApp";
+
 const SDK_SRC =
   process.env.NEXT_PUBLIC_WALLET_SDK_URL ?? "https://wallet.domovina.ai/sdk.js";
 
@@ -47,8 +49,15 @@ export interface EcosystemWallet {
   signerAddress: `0x${string}`; // WebAuthn signer — owns per-campaign Safes too
 }
 
-/// Connect the DOMOVINA ecosystem wallet (Face ID inside the wallet iframe).
+/// Connect the user's wallet. Inside Safe{Wallet} (Safe App) the host Safe is the
+/// account and owns the per-campaign Safes; otherwise connect the DOMOVINA
+/// ecosystem wallet (Face ID inside the wallet iframe).
 export async function connectWallet(): Promise<EcosystemWallet> {
+  const safeCtx = await getSafeContext();
+  if (safeCtx) {
+    // Host Safe is the signer/owner — campaign Safes derive from it via saltNonce.
+    return { safeAddress: safeCtx.safeAddress, signerAddress: safeCtx.safeAddress };
+  }
   await loadSdk();
   if (!window.Domovina) throw new Error("wallet_sdk_unavailable");
   const r = await window.Domovina.connect();
@@ -58,10 +67,14 @@ export async function connectWallet(): Promise<EcosystemWallet> {
   };
 }
 
-/// Send EURe from the user's DOMOVINA wallet (in-iframe confirm + Face ID) to
-/// `to`. `amount` is an EURe decimal string (e.g. "5.00"). Returns the tx hash;
-/// pinka then verifies+credits it via the pinka-onchain-confirm edge fn.
+/// Send EURe to `to`. Inside Safe{Wallet} the transfer is proposed to the host
+/// Safe (user confirms there); otherwise it goes through the DOMOVINA wallet
+/// (in-iframe confirm + Face ID). `amount` is an EURe decimal string (e.g.
+/// "5.00"). Returns the tx hash; pinka verifies+credits it via the
+/// pinka-onchain-confirm edge fn.
 export async function sendEure(to: string, amount: string): Promise<{ txHash: string }> {
+  const safeCtx = await getSafeContext();
+  if (safeCtx) return sendEureViaSafe(to, amount);
   await loadSdk();
   if (!window.Domovina) throw new Error("wallet_sdk_unavailable");
   return window.Domovina.send({ to, amount });

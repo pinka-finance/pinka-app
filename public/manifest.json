@@ -1,0 +1,5 @@
+{
+  "name": "pinka",
+  "description": "Group-funding in regulated euros — each campaign is a Safe. Fund by EPC QR from your bank (SEPA → Monerium EURe → Safe on Gnosis).",
+  "iconPath": "pinka-icon.svg"
+}

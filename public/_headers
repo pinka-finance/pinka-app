@@ -1,0 +1,11 @@
+# Cloudflare Pages headers (copied to out/ on next export, like _redirects).
+# Safe{Wallet} fetches manifest.json + the icon cross-origin to load pinka as a
+# Safe App, so they need permissive CORS. Required by the Safe Apps SDK listing
+# criteria — see funding/SAFE-APP-LISTING.md in bizops-automation-private.
+/manifest.json
+  Access-Control-Allow-Origin: *
+  Access-Control-Allow-Methods: GET
+  Access-Control-Allow-Headers: X-Requested-With, content-type, Authorization
+
+/pinka-icon.svg
+  Access-Control-Allow-Origin: *

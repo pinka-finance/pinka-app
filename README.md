@@ -1,12 +1,17 @@
-# pinka.finance — app
+# pinka — app
 
-Public campaign pages + EPC/SEPA checkout for **pinka.finance**, the onchain
+Public campaign pages + EPC/SEPA checkout for **pinka**, the onchain
 group-funding platform (donations · crowdfunding · soft tokenization · tickets ·
 real-estate) built on the Monerium → EURe → Gnosis rail.
 
 This is the **application** (browse → campaign → donate by scanning an EPC QR →
 live on-chain confirmation). The marketing site lives in the sibling repo
 [`../landing`](../landing).
+
+> **Deploy domains.** This app currently deploys to **https://pinka.io** (apex).
+> The marketing landing (`../landing`) is on **pinka.finance**. `app.pinka.finance`
+> is a possible future alias for this app and is **not live yet**. The production
+> domain is set via `NEXT_PUBLIC_SITE_URL` at build time (see `app/layout.tsx`).
 
 ## Where things live (cross-repo)
 
@@ -67,6 +72,24 @@ exists with `state='active'`, `visibility='public'`.
 - `/dashboard` — creator: magic-link sign-in + my campaigns
 - `/dashboard/new` — create campaign (draft)
 - `/dashboard/c/[id]` — manage: edit · activate/pause/close · tiers · contributions · payouts
+
+## Safe App (Safe{Wallet})
+
+pinka doubles as a **Safe App**: the same deployment, loaded inside Safe{Wallet}'s
+iframe, lets a user act from their **host Safe** instead of the DOMOVINA wallet.
+
+- `public/manifest.json` (+ `public/_headers` CORS) makes the app discoverable as a
+  Safe App; the icon is `public/pinka-icon.svg`.
+- `lib/chain/safeApp.ts` detects the Safe context (`@safe-global/safe-apps-sdk`,
+  Gnosis-only) and proposes EURe transfers to Safe{Wallet}.
+- `lib/chain/walletSdk.ts` transparently routes `connectWallet`/`sendEure` through
+  the host Safe when framed, and falls back to the DOMOVINA wallet otherwise — no
+  changes needed in the campaign/contribute UI.
+
+**Try it without a directory listing** (Safe paused new listings in 2026-06):
+Safe{Wallet} → Apps → *Add custom Safe App* → paste `https://pinka.io`. The name +
+icon resolve from the manifest. See `funding/SAFE-APP-LISTING.md` in the private
+`bizops-automation` repo for the listing plan + verification checklist.
 
 ## Status / roadmap
 

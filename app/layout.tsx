@@ -20,7 +20,12 @@ const fraunces = Fraunces({
   axes: ["opsz", "SOFT"],
 });
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://app.pinka.finance";
+// Current production deploy of this repo (pinka-finance/app) is https://pinka.io —
+// the apex domain (the build sets NEXT_PUBLIC_SITE_URL; the canonical/og URLs in
+// out/ resolve to pinka.io). The marketing landing (pinka-finance/landing) is on
+// pinka.finance. app.pinka.finance is a possible future alias for this app, not
+// live yet — so the fallback below points at the real current domain.
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://pinka.io";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
