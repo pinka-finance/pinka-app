@@ -235,6 +235,30 @@ const hr = {
     minLabel: "Najmanji doprinos (€)",
     minDesc:
       "Donja granica jedne uplate. Spriječava sitne iznose. Tipično 1–5 €.",
+    recurrenceLabel: "Ponavljanje (članarina)",
+    recurrenceDesc:
+      "Očekivani raspored za ponavljajuće podržavatelje. Pinka **ne tereti** karticu — svaku uplatu član sam odobri (trajni nalog u banci ili ponovna uplata) i može ju besplatno otkazati. Ovo samo definira **kada se uplata očekuje** pa znamo tko je aktivan, a tko je propustio ciklus. Bez naknada — pogodno i za režije/račune.",
+    anchorDayLabel: "Dan u mjesecu (opcionalno)",
+    anchorDayPlaceholder: "npr. 15 — prazno = od prve uplate",
+    recurrences: {
+      none: {
+        label: "Jednokratno",
+        blurb: "Bez očekivanog ponavljanja — obična donacija.",
+      },
+      monthly: {
+        label: "Mjesečno",
+        blurb:
+          "Očekuje se svaki mjesec. Prazan dan = mjesec dana od svake prve uplate; upisan dan (npr. 15) = fiksno tog datuma.",
+      },
+      quarterly: {
+        label: "Tromjesečno",
+        blurb: "Očekuje se svaka 3 mjeseca od prve uplate.",
+      },
+      yearly: {
+        label: "Godišnje",
+        blurb: "Očekuje se jednom godišnje od prve uplate.",
+      },
+    },
     visLabel: "Vidljivost",
     visDesc:
       "Tko može vidjeti kampanju. Bez brige — kreira se kao **nacrt** i ne prima uplate dok je ručno ne aktiviraš.",
@@ -320,6 +344,7 @@ const hr = {
       edit: "Uredi",
       tiers: "Nagrade",
       contributions: "Doprinosi",
+      members: "Članovi",
       payouts: "Isplate",
     },
     tiers: {
@@ -346,6 +371,36 @@ const hr = {
         amount: "Iznos",
         state: "Stanje",
         message: "Poruka (zid)",
+      },
+    },
+    members: {
+      empty: "Još nema ponavljajućih članova.",
+      intro:
+        "Ponavljajući podržavatelji — prepoznati, ne naplaćeni. Pinka ne tereti karticu; svaku uplatu član sam odobri (trajnim nalogom u svojoj banci ili ponovnom uplatom preko QR-a) i može ju besplatno otkazati kad god želi. Prikazani su uplatitelji s 2+ uplate.",
+      anonymous: "Anoniman",
+      cancel: "Otkaži",
+      cancelConfirm:
+        "Označiti ovog člana kao otkazanog? Sljedeća uplata automatski ga ponovno aktivira.",
+      cols: {
+        name: "Ime",
+        status: "Status",
+        cadence: "Učestalost",
+        count: "Uplata",
+        total: "Ukupno",
+        last: "Zadnja",
+        next: "Očekivano",
+      },
+      statuses: {
+        active: "Aktivan",
+        lapsed: "Neaktivan",
+        cancelled: "Otkazan",
+      },
+      cadences: {
+        monthly: "Mjesečno",
+        quarterly: "Tromjesečno",
+        yearly: "Godišnje",
+        irregular: "Neredovito",
+        unknown: "—",
       },
     },
     payouts: {
@@ -578,6 +633,30 @@ const en: Messages = {
     minLabel: "Minimum contribution (€)",
     minDesc:
       "The lower bound of a single payment. Prevents tiny amounts. Typically 1–5 €.",
+    recurrenceLabel: "Recurrence (membership)",
+    recurrenceDesc:
+      "The expected schedule for recurring supporters. Pinka **never charges** a card — the member approves each payment themselves (a standing order at their bank, or paying again) and can cancel for free. This only defines **when a payment is expected** so we know who is active vs. who skipped a cycle. No fees — also suitable for utility bills.",
+    anchorDayLabel: "Day of month (optional)",
+    anchorDayPlaceholder: "e.g. 15 — empty = from first payment",
+    recurrences: {
+      none: {
+        label: "One-off",
+        blurb: "No expected recurrence — a plain donation.",
+      },
+      monthly: {
+        label: "Monthly",
+        blurb:
+          "Expected every month. Empty day = one month from each first payment; a set day (e.g. 15) = fixed on that date.",
+      },
+      quarterly: {
+        label: "Quarterly",
+        blurb: "Expected every 3 months from the first payment.",
+      },
+      yearly: {
+        label: "Yearly",
+        blurb: "Expected once a year from the first payment.",
+      },
+    },
     visLabel: "Visibility",
     visDesc:
       "Who can see the campaign. No worries — it's created as a **draft** and won't accept payments until you activate it manually.",
@@ -663,6 +742,7 @@ const en: Messages = {
       edit: "Edit",
       tiers: "Rewards",
       contributions: "Contributions",
+      members: "Members",
       payouts: "Payouts",
     },
     tiers: {
@@ -689,6 +769,36 @@ const en: Messages = {
         amount: "Amount",
         state: "Status",
         message: "Message (wall)",
+      },
+    },
+    members: {
+      empty: "No recurring members yet.",
+      intro:
+        "Recurring supporters — recognised, not charged. Pinka never debits a card; the member approves each payment themselves (a standing order at their own bank, or paying again via the QR) and can cancel for free anytime. Payers with 2+ payments are shown.",
+      anonymous: "Anonymous",
+      cancel: "Cancel",
+      cancelConfirm:
+        "Mark this member as cancelled? Their next payment will automatically reactivate it.",
+      cols: {
+        name: "Name",
+        status: "Status",
+        cadence: "Frequency",
+        count: "Payments",
+        total: "Total",
+        last: "Last",
+        next: "Expected",
+      },
+      statuses: {
+        active: "Active",
+        lapsed: "Lapsed",
+        cancelled: "Cancelled",
+      },
+      cadences: {
+        monthly: "Monthly",
+        quarterly: "Quarterly",
+        yearly: "Yearly",
+        irregular: "Irregular",
+        unknown: "—",
       },
     },
     payouts: {

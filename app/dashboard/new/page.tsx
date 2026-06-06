@@ -108,6 +108,8 @@ function NewInner() {
                 subjectType: v.subjectType,
                 subjectRef: v.subjectRef,
                 visibility: v.visibility,
+                recurrence: v.recurrence,
+                recurrenceAnchorDay: v.recurrenceAnchorDay,
                 metadata: {
                   safe: {
                     signer_address: safe.signerAddress,

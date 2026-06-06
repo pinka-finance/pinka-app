@@ -17,10 +17,13 @@ import {
   deleteTier,
   listContributions,
   setContributionHidden,
+  listMembers,
+  cancelSubscription,
   listPayouts,
   type MyCampaign,
   type Tier,
   type DashContribution,
+  type Member,
   type Payout,
 } from "@/lib/dashboard";
 import { connectWallet } from "@/lib/chain/walletSdk";
@@ -49,20 +52,23 @@ function ManageInner({ id }: { id: string }) {
   const [campaign, setCampaign] = useState<MyCampaign | null | undefined>(undefined);
   const [tiers, setTiers] = useState<Tier[]>([]);
   const [contribs, setContribs] = useState<DashContribution[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
-  const [tab, setTab] = useState<"edit" | "tiers" | "contributions" | "payouts">("edit");
+  const [tab, setTab] = useState<"edit" | "tiers" | "contributions" | "members" | "payouts">("edit");
 
   const reload = useCallback(async () => {
     const c = await getMyCampaign(id);
     setCampaign(c);
     if (c) {
-      const [t, ct, p] = await Promise.all([
+      const [t, ct, m, p] = await Promise.all([
         listTiers(id),
         listContributions(id),
+        listMembers(id),
         listPayouts(id),
       ]);
       setTiers(t);
       setContribs(ct);
+      setMembers(m);
       setPayouts(p);
     }
   }, [id]);
@@ -148,6 +154,7 @@ function ManageInner({ id }: { id: string }) {
           ["edit", t("manage.tabs.edit")],
           ["tiers", `${t("manage.tabs.tiers")} (${tiers.length})`],
           ["contributions", `${t("manage.tabs.contributions")} (${contribs.length})`],
+          ["members", `${t("manage.tabs.members")} (${members.length})`],
           ["payouts", `${t("manage.tabs.payouts")} (${payouts.length})`],
         ] as const).map(([key, label]) => (
           <button
@@ -186,6 +193,8 @@ function ManageInner({ id }: { id: string }) {
                 subjectType: campaign.subject_type,
                 subjectRef: campaign.subject_ref,
                 visibility: campaign.visibility as "private" | "unlisted" | "public",
+                recurrence: campaign.recurrence,
+                recurrenceAnchorDay: campaign.recurrence_anchor_day,
               }}
               onSubmit={async (v) => {
                 // Ne dopusti izlazak iz 'private' dok Safe (spremana adresa) nije
@@ -204,6 +213,8 @@ function ManageInner({ id }: { id: string }) {
                   subject_type: v.subjectType,
                   subject_ref: v.subjectRef,
                   visibility: v.visibility,
+                  recurrence: v.recurrence,
+                  recurrence_anchor_day: v.recurrenceAnchorDay,
                 });
                 reload();
               }}
@@ -217,6 +228,8 @@ function ManageInner({ id }: { id: string }) {
         ) : null}
 
         {tab === "contributions" ? <ContributionsTab rows={contribs} onChange={reload} /> : null}
+
+        {tab === "members" ? <MembersTab rows={members} onChange={reload} /> : null}
 
         {tab === "payouts" ? <PayoutsTab rows={payouts} /> : null}
       </div>
@@ -444,6 +457,106 @@ function ContributionsTab({
         </tbody>
       </table>
     </div>
+  );
+}
+
+function MembersTab({
+  rows,
+  onChange,
+}: {
+  rows: Member[];
+  onChange: () => void;
+}) {
+  const { t, locale } = useI18n();
+  const [busyId, setBusyId] = useState<string | null>(null);
+  if (rows.length === 0)
+    return (
+      <div className="max-w-2xl space-y-2">
+        <p className="text-inkMuted">{t("manage.members.empty")}</p>
+        <p className="text-xs text-inkMuted">{t("manage.members.intro")}</p>
+      </div>
+    );
+
+  async function cancel(m: Member) {
+    if (!confirm(t("manage.members.cancelConfirm"))) return;
+    setBusyId(m.id);
+    try {
+      await cancelSubscription(m.id);
+      onChange();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setBusyId(null);
+    }
+  }
+
+  const fmtDate = (s: string | null) =>
+    s ? new Date(s).toLocaleDateString(locale) : "—";
+
+  return (
+    <div className="space-y-3">
+      <p className="max-w-2xl text-xs text-inkMuted">{t("manage.members.intro")}</p>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-ink/8 text-left text-inkMuted">
+              <th className="py-2 pr-4 font-medium">{t("manage.members.cols.name")}</th>
+              <th className="py-2 pr-4 font-medium">{t("manage.members.cols.status")}</th>
+              <th className="py-2 pr-4 font-medium">{t("manage.members.cols.cadence")}</th>
+              <th className="py-2 pr-4 font-medium">{t("manage.members.cols.count")}</th>
+              <th className="py-2 pr-4 font-medium">{t("manage.members.cols.total")}</th>
+              <th className="py-2 pr-4 font-medium">{t("manage.members.cols.last")}</th>
+              <th className="py-2 pr-4 font-medium">{t("manage.members.cols.next")}</th>
+              <th className="py-2 font-medium"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((m) => (
+              <tr key={m.id} className="border-b border-ink/5 align-top">
+                <td className="py-2 pr-4">{m.display_name?.trim() || t("manage.members.anonymous")}</td>
+                <td className="py-2 pr-4">
+                  <MemberStatusPill status={m.effective_status} />
+                </td>
+                <td className="py-2 pr-4 whitespace-nowrap">{t(`manage.members.cadences.${m.effective_cadence}`)}</td>
+                <td className="py-2 pr-4 whitespace-nowrap">{m.contribution_count}×</td>
+                <td className="py-2 pr-4 whitespace-nowrap">{fmtEur(m.total_cents)} €</td>
+                <td className="py-2 pr-4 whitespace-nowrap">{fmtDate(m.last_contribution_at)}</td>
+                <td className="py-2 pr-4 whitespace-nowrap">
+                  {m.effective_status === "cancelled" ? "—" : fmtDate(m.next_expected_at)}
+                </td>
+                <td className="py-2">
+                  {m.effective_status !== "cancelled" ? (
+                    <button
+                      type="button"
+                      onClick={() => cancel(m)}
+                      disabled={busyId === m.id}
+                      className="shrink-0 rounded-full border border-ink/15 px-2 py-0.5 text-xs hover:border-ink/30 disabled:opacity-50"
+                    >
+                      {busyId === m.id ? "…" : t("manage.members.cancel")}
+                    </button>
+                  ) : null}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function MemberStatusPill({ status }: { status: Member["effective_status"] }) {
+  const { t } = useI18n();
+  const cls =
+    status === "active"
+      ? "bg-teal-100 text-teal-800"
+      : status === "lapsed"
+        ? "bg-amber-100 text-amber-800"
+        : "bg-ink/5 text-inkMuted";
+  return (
+    <span className={"inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium " + cls}>
+      {t(`manage.members.statuses.${status}`)}
+    </span>
   );
 }
 

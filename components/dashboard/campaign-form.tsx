@@ -6,6 +6,8 @@ import type { CampaignType } from "@/lib/pinka";
 import { parseEurToCents } from "@/lib/format";
 import { useI18n, Rich } from "@/lib/i18n";
 
+export type Recurrence = "none" | "monthly" | "quarterly" | "yearly";
+
 export interface CampaignFormValues {
   title: string;
   type: CampaignType;
@@ -16,6 +18,10 @@ export interface CampaignFormValues {
   subjectType: string;
   subjectRef: string | null;
   visibility: "private" | "unlisted" | "public";
+  recurrence: Recurrence;
+  // fixed day-of-month the payment is expected (monthly only); null = anchor to
+  // each member's own first-payment day
+  recurrenceAnchorDay: number | null;
 }
 
 const inputCls =
@@ -56,6 +62,7 @@ const VIS_VALUES: ("public" | "unlisted" | "private")[] = [
   "unlisted",
   "private",
 ];
+const RECUR_VALUES: Recurrence[] = ["none", "monthly", "quarterly", "yearly"];
 
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
 
@@ -83,6 +90,10 @@ export function CampaignForm({
   const [subjectType, setSubjectType] = useState(initial?.subjectType ?? "generic");
   const [subjectRef, setSubjectRef] = useState(initial?.subjectRef ?? "");
   const [visibility, setVisibility] = useState<"private" | "unlisted" | "public">(initial?.visibility ?? "public");
+  const [recurrence, setRecurrence] = useState<Recurrence>(initial?.recurrence ?? "none");
+  const [anchorDay, setAnchorDay] = useState(
+    initial?.recurrenceAnchorDay ? String(initial.recurrenceAnchorDay) : "",
+  );
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,6 +117,12 @@ export function CampaignForm({
     if (goal.trim() && goalCents === null) return setError(t("form.errGoalInvalid"));
     setBusy(true);
     try {
+      // anchor day applies to monthly only; clamp to 1..31
+      const dayNum = parseInt(anchorDay, 10);
+      const anchor =
+        recurrence === "monthly" && Number.isFinite(dayNum)
+          ? Math.min(31, Math.max(1, dayNum))
+          : null;
       await onSubmit({
         title: effectiveTitle,
         type,
@@ -116,6 +133,8 @@ export function CampaignForm({
         subjectType: subjectType.trim() || "generic",
         subjectRef: subjectRef.trim() || null,
         visibility,
+        recurrence,
+        recurrenceAnchorDay: anchor,
       });
     } catch (err) {
       console.error(err);
@@ -169,6 +188,42 @@ export function CampaignForm({
 
       <Field label={t("form.minLabel")} desc={t("form.minDesc")}>
         <input className={inputCls} inputMode="decimal" value={min} onChange={(e) => setMin(e.target.value)} />
+      </Field>
+
+      <Field
+        label={t("form.recurrenceLabel")}
+        desc={
+          <>
+            <p><Rich>{t("form.recurrenceDesc")}</Rich></p>
+            <p className="mt-2 rounded-lg bg-teal/5 px-3 py-2 text-inkSoft">
+              {t(`form.recurrences.${recurrence}.blurb`)}
+            </p>
+          </>
+        }
+      >
+        <select
+          className={inputCls}
+          value={recurrence}
+          onChange={(e) => setRecurrence(e.target.value as Recurrence)}
+        >
+          {RECUR_VALUES.map((v) => (
+            <option key={v} value={v}>{t(`form.recurrences.${v}.label`)}</option>
+          ))}
+        </select>
+        {recurrence === "monthly" ? (
+          <div className="mt-3">
+            <label className="mb-1 block text-xs font-medium text-inkSoft">
+              {t("form.anchorDayLabel")}
+            </label>
+            <input
+              className={inputCls}
+              inputMode="numeric"
+              value={anchorDay}
+              onChange={(e) => setAnchorDay(e.target.value)}
+              placeholder={t("form.anchorDayPlaceholder")}
+            />
+          </div>
+        ) : null}
       </Field>
 
       <Field

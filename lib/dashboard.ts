@@ -22,6 +22,8 @@ export interface MyCampaign {
   min_contribution_cents: number;
   total_raised_cents: number;
   contributor_count: number;
+  recurrence: "none" | "monthly" | "quarterly" | "yearly";
+  recurrence_anchor_day: number | null;
 }
 
 export interface Tier {
@@ -56,6 +58,25 @@ export interface Payout {
   created_at: string;
 }
 
+// A recurring supporter (članarina). Recognised — never auto-charged — by
+// grouping settled push-SEPA payments on payer_iban_hash per campaign. See
+// migration 20260606120000_pinka_finance_subscriptions.sql.
+export interface Member {
+  id: string;
+  display_name: string | null;
+  effective_status: "active" | "lapsed" | "cancelled";
+  // declared campaign cadence if set, else the observed/inferred one
+  effective_cadence: "monthly" | "quarterly" | "yearly" | "irregular" | "unknown";
+  declared: boolean;
+  interval_days: number | null;
+  contribution_count: number;
+  total_cents: number;
+  last_amount_cents: number | null;
+  first_contribution_at: string | null;
+  last_contribution_at: string | null;
+  next_expected_at: string | null;
+}
+
 export interface NewCampaignInput {
   id?: string; // client-generated so the per-campaign Safe salt matches
   accountId: string;
@@ -68,13 +89,16 @@ export interface NewCampaignInput {
   subjectType: string;
   subjectRef: string | null;
   visibility: "private" | "unlisted" | "public";
+  recurrence?: "none" | "monthly" | "quarterly" | "yearly";
+  recurrenceAnchorDay?: number | null;
   metadata?: Record<string, unknown>;
 }
 
 const SELECT =
   "id, slug, title, type, state, visibility, goal_cents, currency, " +
   "destination_address, subject_type, subject_ref, description, " +
-  "min_contribution_cents, campaign_stats(total_raised_cents, contributor_count)";
+  "min_contribution_cents, recurrence, recurrence_anchor_day, " +
+  "campaign_stats(total_raised_cents, contributor_count)";
 
 function normalize(row: Record<string, unknown>): MyCampaign {
   const s = (row.campaign_stats ?? {}) as Record<string, number> | null;
@@ -95,6 +119,8 @@ function normalize(row: Record<string, unknown>): MyCampaign {
     min_contribution_cents: (row.min_contribution_cents as number) ?? 100,
     total_raised_cents: (stats as Record<string, number>).total_raised_cents ?? 0,
     contributor_count: (stats as Record<string, number>).contributor_count ?? 0,
+    recurrence: (row.recurrence as MyCampaign["recurrence"]) ?? "none",
+    recurrence_anchor_day: (row.recurrence_anchor_day as number) ?? null,
   };
 }
 
@@ -156,6 +182,8 @@ export async function createCampaign(input: NewCampaignInput): Promise<string> {
         subject_type: input.subjectType,
         subject_ref: input.subjectRef,
         visibility: input.visibility,
+        recurrence: input.recurrence ?? "none",
+        recurrence_anchor_day: input.recurrenceAnchorDay ?? null,
         state: "draft",
         ...(input.metadata ? { metadata: input.metadata } : {}),
       })
@@ -183,6 +211,8 @@ export async function updateCampaign(
     subject_ref: string | null;
     visibility: string;
     state: string;
+    recurrence: "none" | "monthly" | "quarterly" | "yearly";
+    recurrence_anchor_day: number | null;
     cover_image_url: string | null;
     metadata: Record<string, unknown>;
   }>,
@@ -289,6 +319,38 @@ export async function setContributionHidden(contributionId: string, hidden: bool
       p_contribution_id: contributionId,
       p_hidden: hidden,
     });
+  if (error) throw error;
+}
+
+// Recurring supporters for a campaign. Reads the subscriptions_view (adds the
+// live effective_status); RLS lets only the campaign admin see the full list.
+// Ordered by recurring members first (most contributions), then recent activity.
+export async function listMembers(campaignId: string): Promise<Member[]> {
+  const sb = supabaseBrowser();
+  const { data, error } = await sb
+    .schema("pinka_finance")
+    .from("subscriptions_view")
+    .select(
+      "id, display_name, effective_status, effective_cadence, declared, interval_days, " +
+        "contribution_count, total_cents, last_amount_cents, " +
+        "first_contribution_at, last_contribution_at, next_expected_at",
+    )
+    .eq("campaign_id", campaignId)
+    .gte("contribution_count", 2) // recurring = paid ≥ 2×; one-timers aren't members yet
+    .order("contribution_count", { ascending: false })
+    .order("last_contribution_at", { ascending: false })
+    .limit(200);
+  if (error) throw error;
+  return (data ?? []) as unknown as Member[];
+}
+
+// Mark a subscription cancelled (sticky). A later payment auto-reactivates it.
+// Server RPC authorises campaign admin or the subscriber themselves.
+export async function cancelSubscription(subscriptionId: string): Promise<void> {
+  const sb = supabaseBrowser();
+  const { error } = await sb
+    .schema("pinka_finance")
+    .rpc("cancel_subscription", { p_subscription_id: subscriptionId });
   if (error) throw error;
 }
 
