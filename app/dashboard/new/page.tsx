@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, ShieldCheck, Loader2 } from "lucide-react";
@@ -43,6 +43,16 @@ function NewInner() {
       setConnecting(false);
     }
   }
+
+  // Returning from the DOMOVINA Wallet "Kreiraj novčanik" redirect: the SDK
+  // resolves connect() synchronously from the URL params, so just re-run it.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("dw_return") === "1") {
+      void connect();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="container-content max-w-4xl py-12">
