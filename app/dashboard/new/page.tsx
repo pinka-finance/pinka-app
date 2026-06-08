@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, ShieldCheck, Loader2 } from "lucide-react";
@@ -28,12 +28,13 @@ function NewInner() {
   const [safe, setSafe] = useState<CampaignSafe | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const walletMountRef = useRef<HTMLDivElement>(null);
 
   async function connect() {
     setConnecting(true);
     setError(null);
     try {
-      const { signerAddress, safeAddress } = await connectWallet();
+      const { signerAddress, safeAddress } = await connectWallet(walletMountRef.current);
       setEcosystemSafe(safeAddress);
       setSafe(await deriveCampaignSafeFromSigner(signerAddress, draftId));
     } catch (e) {
@@ -74,10 +75,15 @@ function NewInner() {
         </p>
 
         {!safe ? (
-          <Button onClick={connect} disabled={connecting} className="mt-4">
-            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
-            {connecting ? t("dashboardNew.openingWallet") : t("dashboardNew.connectWallet")}
-          </Button>
+          <>
+            <Button onClick={connect} disabled={connecting} className="mt-4">
+              {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
+              {connecting ? t("dashboardNew.openingWallet") : t("dashboardNew.connectWallet")}
+            </Button>
+            {/* DOMOVINA Wallet mounts its connect UI inline here (auto-resizing
+                panel), so it reads as embedded rather than a full-page redirect. */}
+            <div ref={walletMountRef} className="mt-4 max-w-sm empty:hidden" />
+          </>
         ) : (
           <dl className="mt-4 space-y-2 text-xs">
             <div>

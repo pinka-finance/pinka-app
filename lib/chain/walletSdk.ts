@@ -17,7 +17,11 @@ const SDK_SRC =
   process.env.NEXT_PUBLIC_WALLET_SDK_URL ?? "https://wallet.domovina.ai/sdk.js";
 
 interface DomovinaSdk {
-  connect(): Promise<{ safeAddress: string; signerAddress: string; balance?: string }>;
+  connect(opts?: {
+    container?: HTMLElement;
+  }): Promise<{ safeAddress: string; signerAddress: string; balance?: string }>;
+  /** Mount the wallet iframe inline inside `container` instead of fullscreen. */
+  mount?(container: HTMLElement | null): unknown;
   send(a: { to: string; amount: string }): Promise<{ txHash: string }>;
 }
 
@@ -51,8 +55,10 @@ export interface EcosystemWallet {
 
 /// Connect the user's wallet. Inside Safe{Wallet} (Safe App) the host Safe is the
 /// account and owns the per-campaign Safes; otherwise connect the DOMOVINA
-/// ecosystem wallet (Face ID inside the wallet iframe).
-export async function connectWallet(): Promise<EcosystemWallet> {
+/// ecosystem wallet (Face ID inside the wallet iframe). Pass `container` to mount
+/// the wallet UI inline there (an integrated, auto-resizing panel) instead of a
+/// fullscreen overlay.
+export async function connectWallet(container?: HTMLElement | null): Promise<EcosystemWallet> {
   const safeCtx = await getSafeContext();
   if (safeCtx) {
     // Host Safe is the signer/owner — campaign Safes derive from it via saltNonce.
@@ -60,7 +66,7 @@ export async function connectWallet(): Promise<EcosystemWallet> {
   }
   await loadSdk();
   if (!window.Domovina) throw new Error("wallet_sdk_unavailable");
-  const r = await window.Domovina.connect();
+  const r = await window.Domovina.connect(container ? { container } : undefined);
   return {
     safeAddress: r.safeAddress as `0x${string}`,
     signerAddress: r.signerAddress as `0x${string}`,
