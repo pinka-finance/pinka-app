@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, ShieldCheck, Loader2 } from "lucide-react";
@@ -8,7 +8,7 @@ import { AuthGate } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { CampaignForm } from "@/components/dashboard/campaign-form";
 import { createCampaign, getMyAccountId } from "@/lib/dashboard";
-import { connectWallet } from "@/lib/chain/walletSdk";
+import { connectWallet, disconnectWallet } from "@/lib/chain/walletSdk";
 import { deriveCampaignSafeFromSigner, type CampaignSafe } from "@/lib/chain/safe";
 import { useI18n, Rich } from "@/lib/i18n";
 
@@ -28,13 +28,14 @@ function NewInner() {
   const [safe, setSafe] = useState<CampaignSafe | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const walletMountRef = useRef<HTMLDivElement>(null);
 
-  async function connect() {
+  async function connect(opts?: { force?: boolean }) {
     setConnecting(true);
     setError(null);
     try {
-      const { signerAddress, safeAddress } = await connectWallet(walletMountRef.current);
+      // First connect hands off full-page to the wallet and never resolves here
+      // (the page navigates away, then returns); a cached connect resolves now.
+      const { signerAddress, safeAddress } = await connectWallet(opts);
       setEcosystemSafe(safeAddress);
       setSafe(await deriveCampaignSafeFromSigner(signerAddress, draftId));
     } catch (e) {
@@ -45,8 +46,14 @@ function NewInner() {
     }
   }
 
-  // Returning from the DOMOVINA Wallet "Kreiraj novčanik" redirect: the SDK
-  // resolves connect() synchronously from the URL params, so just re-run it.
+  // Pick a different wallet: drop the cached identity, then hand off again.
+  async function changeWallet() {
+    await disconnectWallet();
+    void connect({ force: true });
+  }
+
+  // Returning from the full-page wallet handoff: the SDK resolves connect()
+  // synchronously from the URL params, so just re-run it.
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (new URLSearchParams(window.location.search).get("dw_return") === "1") {
@@ -75,15 +82,10 @@ function NewInner() {
         </p>
 
         {!safe ? (
-          <>
-            <Button onClick={connect} disabled={connecting} className="mt-4">
-              {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
-              {connecting ? t("dashboardNew.openingWallet") : t("dashboardNew.connectWallet")}
-            </Button>
-            {/* DOMOVINA Wallet mounts its connect UI inline here (auto-resizing
-                panel), so it reads as embedded rather than a full-page redirect. */}
-            <div ref={walletMountRef} className="mt-4 max-w-sm empty:hidden" />
-          </>
+          <Button onClick={() => connect()} disabled={connecting} className="mt-4">
+            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
+            {connecting ? t("dashboardNew.openingWallet") : t("dashboardNew.connectWallet")}
+          </Button>
         ) : (
           <dl className="mt-4 space-y-2 text-xs">
             <div>
@@ -97,6 +99,13 @@ function NewInner() {
             <p className="pt-1 leading-relaxed text-inkMuted">
               <Rich>{t("dashboardNew.counterfactualNote")}</Rich>
             </p>
+            <button
+              type="button"
+              onClick={changeWallet}
+              className="text-inkMuted underline underline-offset-2 hover:text-ink"
+            >
+              {t("dashboardNew.changeWallet")}
+            </button>
           </dl>
         )}
       </div>

@@ -18,10 +18,10 @@ const SDK_SRC =
 
 interface DomovinaSdk {
   connect(opts?: {
-    container?: HTMLElement;
+    force?: boolean;
   }): Promise<{ safeAddress: string; signerAddress: string; balance?: string }>;
-  /** Mount the wallet iframe inline inside `container` instead of fullscreen. */
-  mount?(container: HTMLElement | null): unknown;
+  /** Forget the cached connection so the next connect() re-picks a wallet. */
+  disconnect?(): void;
   send(a: { to: string; amount: string }): Promise<{ txHash: string }>;
 }
 
@@ -54,11 +54,14 @@ export interface EcosystemWallet {
 }
 
 /// Connect the user's wallet. Inside Safe{Wallet} (Safe App) the host Safe is the
-/// account and owns the per-campaign Safes; otherwise connect the DOMOVINA
-/// ecosystem wallet (Face ID inside the wallet iframe). Pass `container` to mount
-/// the wallet UI inline there (an integrated, auto-resizing panel) instead of a
-/// fullscreen overlay.
-export async function connectWallet(container?: HTMLElement | null): Promise<EcosystemWallet> {
+/// account and owns the per-campaign Safes; otherwise resolve the DOMOVINA
+/// ecosystem wallet. First connect on a device hands off full-page to
+/// wallet.domovina.ai (native passkey create/open) and returns here; after that
+/// it resolves instantly from the cached identity. NOTE: on a fresh connect this
+/// navigates away and the returned promise never resolves — the page reloads on
+/// return and `connect()` is re-run (see dashboard/new). Pass `{ force:true }` to
+/// re-pick a different wallet.
+export async function connectWallet(opts?: { force?: boolean }): Promise<EcosystemWallet> {
   const safeCtx = await getSafeContext();
   if (safeCtx) {
     // Host Safe is the signer/owner — campaign Safes derive from it via saltNonce.
@@ -66,11 +69,20 @@ export async function connectWallet(container?: HTMLElement | null): Promise<Eco
   }
   await loadSdk();
   if (!window.Domovina) throw new Error("wallet_sdk_unavailable");
-  const r = await window.Domovina.connect(container ? { container } : undefined);
+  const r = await window.Domovina.connect(opts);
   return {
     safeAddress: r.safeAddress as `0x${string}`,
     signerAddress: r.signerAddress as `0x${string}`,
   };
+}
+
+/// Forget the cached DOMOVINA wallet connection (host-side). The next
+/// connectWallet() will hand off to the wallet again to pick a different one.
+export async function disconnectWallet(): Promise<void> {
+  if (typeof window !== "undefined") {
+    await loadSdk().catch(() => undefined);
+    window.Domovina?.disconnect?.();
+  }
 }
 
 /// Send EURe to `to`. Inside Safe{Wallet} the transfer is proposed to the host

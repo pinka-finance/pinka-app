@@ -204,6 +204,7 @@ const hr = {
       "Poveži svoj **DOMOVINA wallet** — isti passkey-identitet koji koristiš na domovina.ai i drugim aplikacijama ekosustava. Iz njega izvodimo **vlastiti Safe za ovu kampanju** (donacije stižu odvojeno po kampanji), a kontrolu nad svime imaš ti, jednim passkeyem.",
     openingWallet: "Otvaram wallet…",
     connectWallet: "Poveži DOMOVINA wallet",
+    changeWallet: "Promijeni novčanik",
     ecosystemWalletLabel: "Tvoj ekosustav-wallet (zajednički identitet)",
     campaignSafeLabel: "Safe ove kampanje — ovamo stižu donacije",
     counterfactualNote:
@@ -602,6 +603,7 @@ const en: Messages = {
       "Connect your **DOMOVINA wallet** — the same passkey identity you use on domovina.ai and other ecosystem apps. From it we derive a **dedicated Safe for this campaign** (donations arrive separately per campaign), while you keep full control with a single passkey.",
     openingWallet: "Opening wallet…",
     connectWallet: "Connect DOMOVINA wallet",
+    changeWallet: "Change wallet",
     ecosystemWalletLabel: "Your ecosystem wallet (shared identity)",
     campaignSafeLabel: "This campaign's Safe — donations arrive here",
     counterfactualNote:
