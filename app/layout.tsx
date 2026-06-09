@@ -4,6 +4,7 @@ import { AuthProvider } from "@/lib/auth";
 import { I18nProvider } from "@/lib/i18n";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
+import { UpdateBanner } from "@/components/update-banner";
 import { SeoSync } from "@/components/seo-sync";
 import "./globals.css";
 
@@ -84,6 +85,7 @@ export default function RootLayout({
             <SiteHeader />
             <main id="main">{children}</main>
             <SiteFooter />
+            <UpdateBanner />
           </AuthProvider>
         </I18nProvider>
       </body>

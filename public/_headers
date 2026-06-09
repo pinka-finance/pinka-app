@@ -9,3 +9,10 @@
 
 /pinka-icon.svg
   Access-Control-Allow-Origin: *
+
+# Version manifest polled by the in-app "Ažuriraj" banner to detect a newer
+# deploy. Must never be cached, or clients keep comparing against a stale commit
+# and the update prompt never fires (or fires forever). CF edge is purged per
+# deploy anyway; this also stops the browser from serving its own cached copy.
+/version.json
+  Cache-Control: no-cache, no-store, must-revalidate

@@ -21,6 +21,12 @@ const hr = {
     copyright: "© pinka.finance",
     rail: "SEPA Instant · Monerium EURe · Gnosis",
   },
+  update: {
+    ready: "Nova verzija je spremna",
+    hint: "Ažuriraj da je primijeniš.",
+    action: "Ažuriraj",
+    dismiss: "Odgodi",
+  },
   seo: {
     title: "pinka — kampanje",
     description:
@@ -427,6 +433,12 @@ const en: Messages = {
   footer: {
     copyright: "© pinka.finance",
     rail: "SEPA Instant · Monerium EURe · Gnosis",
+  },
+  update: {
+    ready: "A new version is ready",
+    hint: "Refresh to apply it.",
+    action: "Refresh",
+    dismiss: "Later",
   },
   seo: {
     title: "pinka — campaigns",
