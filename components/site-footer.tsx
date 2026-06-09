@@ -34,6 +34,7 @@ export function SiteFooter() {
           rel="noreferrer"
           className="font-mono underline-offset-2 hover:text-ink hover:underline"
           title={`Commit ${COMMIT} · built ${BUILD_TIME}`}
+          aria-label={`Commit ${COMMIT} na GitHubu`}
         >
           {COMMIT}
         </a>
