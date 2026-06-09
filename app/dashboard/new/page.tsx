@@ -52,9 +52,9 @@ function NewInner() {
     void connect({ force: true });
   }
 
-  // Warm the wallet SDK so the connect click preserves user activation for the
-  // in-page RoR passkey ceremony. Also: returning from the full-page handoff, the
-  // SDK resolves connect() from the (CSRF-checked) URL params, so just re-run it.
+  // Warm the wallet SDK on mount. Also: returning from the full-page wallet
+  // handoff, the SDK resolves connect() from the (CSRF-checked) URL params, so
+  // just re-run it.
   useEffect(() => {
     if (typeof window === "undefined") return;
     preloadWallet();

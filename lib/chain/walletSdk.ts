@@ -19,7 +19,7 @@ const SDK_SRC =
 interface DomovinaSdk {
   connect(opts?: {
     force?: boolean;
-  }): Promise<{ safeAddress: string; signerAddress: string; balance?: string }>;
+  }): Promise<{ safeAddress: string; signerAddress: string; credentialId?: string | null }>;
   /** Forget the cached connection so the next connect() re-picks a wallet. */
   disconnect?(): void;
   send(a: { to: string; amount: string }): Promise<{ txHash: string }>;
@@ -85,10 +85,10 @@ export async function disconnectWallet(): Promise<void> {
   }
 }
 
-/// Warm the SDK + Safe-App probe ahead of a connect click. connect() runs the
-/// Related Origin Requests passkey ceremony in-page, which needs the click's
-/// user activation — preloading keeps the pre-ceremony awaits as fast microtasks
-/// so activation isn't lost. Call once on the connect screen's mount.
+/// Warm the SDK script + Safe-App probe on the connect screen's mount so the
+/// first connect()/send() click has them ready. (connect() is now a full-page
+/// redirect — no in-page WebAuthn ceremony, so user activation is irrelevant;
+/// this is just a cheap pre-warm of the Safe-App `getSafeContext` probe + script.)
 export function preloadWallet(): void {
   if (typeof window === "undefined") return;
   void getSafeContext();

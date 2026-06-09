@@ -6,7 +6,7 @@ import { Copy, Heart, Loader2, CheckCircle2, Wallet, ShieldCheck } from "lucide-
 import { Button } from "@/components/ui/button";
 import { supabaseBrowser, ensureSession } from "@/lib/supabase";
 import { fmtEur, parseEurToCents } from "@/lib/format";
-import { sendEure } from "@/lib/chain/walletSdk";
+import { connectWallet, sendEure } from "@/lib/chain/walletSdk";
 import { confirmOnchain } from "@/lib/pinka";
 import { useAuth } from "@/lib/auth";
 import { displayNameMatchesIdentity } from "@/lib/name";
@@ -136,6 +136,17 @@ export function ContributePanel({
     }
   }, [verified, verifiedName, displayName]);
 
+  // Returning from the DOMOVINA Wallet connect handoff (first on-chain pay): the
+  // SDK resolves connect() from the URL params and caches the identity, so the
+  // contributor lands back here already connected and a second tap pays.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (new URLSearchParams(window.location.search).get("dw_return") === "1") {
+      void connectWallet().catch(() => undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // eID login from inside the contribute flow: on success `identity` flips to
   // verified and the next contribution is snapshotted as verified server-side
   // (create_contribution reads identity_verifications for the signed-in user).
@@ -200,6 +211,12 @@ export function ContributePanel({
     setWalletErr(null);
     setWalletPhase("sending");
     try {
+      // The wallet SDK's send() requires a prior connect (cached identity). Ensure
+      // we're connected first: resolves instantly if already connected, otherwise
+      // does a full-page handoff to the wallet and returns here (the mount effect
+      // below consumes the return so the next tap pays). Inside Safe{Wallet} this
+      // is a no-op host-Safe resolve.
+      await connectWallet();
       const { txHash } = await sendEure(destinationAddress, (amountCents / 100).toFixed(2));
       setWalletPhase("confirming");
       // Poll the verifier until the tx mines + credits (~Gnosis 5s blocks).
