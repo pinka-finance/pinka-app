@@ -8,7 +8,7 @@ import { AuthGate } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { CampaignForm } from "@/components/dashboard/campaign-form";
 import { createCampaign, getMyAccountId } from "@/lib/dashboard";
-import { connectWallet, disconnectWallet } from "@/lib/chain/walletSdk";
+import { connectWallet, disconnectWallet, preloadWallet } from "@/lib/chain/walletSdk";
 import { deriveCampaignSafeFromSigner, type CampaignSafe } from "@/lib/chain/safe";
 import { useI18n, Rich } from "@/lib/i18n";
 
@@ -52,10 +52,12 @@ function NewInner() {
     void connect({ force: true });
   }
 
-  // Returning from the full-page wallet handoff: the SDK resolves connect()
-  // synchronously from the URL params, so just re-run it.
+  // Warm the wallet SDK so the connect click preserves user activation for the
+  // in-page RoR passkey ceremony. Also: returning from the full-page handoff, the
+  // SDK resolves connect() from the (CSRF-checked) URL params, so just re-run it.
   useEffect(() => {
     if (typeof window === "undefined") return;
+    preloadWallet();
     if (new URLSearchParams(window.location.search).get("dw_return") === "1") {
       void connect();
     }

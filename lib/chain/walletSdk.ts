@@ -85,6 +85,16 @@ export async function disconnectWallet(): Promise<void> {
   }
 }
 
+/// Warm the SDK + Safe-App probe ahead of a connect click. connect() runs the
+/// Related Origin Requests passkey ceremony in-page, which needs the click's
+/// user activation — preloading keeps the pre-ceremony awaits as fast microtasks
+/// so activation isn't lost. Call once on the connect screen's mount.
+export function preloadWallet(): void {
+  if (typeof window === "undefined") return;
+  void getSafeContext();
+  void loadSdk().catch(() => undefined);
+}
+
 /// Send EURe to `to`. Inside Safe{Wallet} the transfer is proposed to the host
 /// Safe (user confirms there); otherwise it goes through the DOMOVINA wallet
 /// (in-iframe confirm + Face ID). `amount` is an EURe decimal string (e.g.
