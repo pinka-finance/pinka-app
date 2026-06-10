@@ -32,6 +32,10 @@ export interface Campaign {
   state: string;
   destination_address: string | null; // campaign's on-chain Safe (public, verifiable)
   chain: string;
+  // optional physical location → marker on karta (gis.domovina.ai)
+  latitude: number | null;
+  longitude: number | null;
+  location_name: string | null;
   stats: CampaignStats;
 }
 
@@ -62,7 +66,7 @@ export interface PublicContribution {
 const CAMPAIGN_SELECT =
   "id, slug, type, title, description, subject_type, subject_ref, " +
   "goal_cents, min_contribution_cents, currency, cover_image_url, state, " +
-  "destination_address, chain, " +
+  "destination_address, chain, latitude, longitude, location_name, " +
   "campaign_stats(total_raised_cents, contribution_count, contributor_count)";
 
 function normalize(row: Record<string, unknown>): Campaign {
@@ -83,6 +87,9 @@ function normalize(row: Record<string, unknown>): Campaign {
     state: (row.state as string) ?? "active",
     destination_address: (row.destination_address as string) ?? null,
     chain: (row.chain as string) ?? "gnosis",
+    latitude: (row.latitude as number) ?? null,
+    longitude: (row.longitude as number) ?? null,
+    location_name: (row.location_name as string) ?? null,
     stats: {
       total_raised_cents: (stats as CampaignStats).total_raised_cents ?? 0,
       contribution_count: (stats as CampaignStats).contribution_count ?? 0,

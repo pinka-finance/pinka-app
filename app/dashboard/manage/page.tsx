@@ -195,6 +195,9 @@ function ManageInner({ id }: { id: string }) {
                 visibility: campaign.visibility as "private" | "unlisted" | "public",
                 recurrence: campaign.recurrence,
                 recurrenceAnchorDay: campaign.recurrence_anchor_day,
+                latitude: campaign.latitude,
+                longitude: campaign.longitude,
+                locationName: campaign.location_name,
               }}
               onSubmit={async (v) => {
                 // Ne dopusti izlazak iz 'private' dok Safe (spremana adresa) nije
@@ -215,6 +218,9 @@ function ManageInner({ id }: { id: string }) {
                   visibility: v.visibility,
                   recurrence: v.recurrence,
                   recurrence_anchor_day: v.recurrenceAnchorDay,
+                  latitude: v.latitude,
+                  longitude: v.longitude,
+                  location_name: v.locationName,
                 });
                 reload();
               }}

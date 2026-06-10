@@ -24,6 +24,9 @@ export interface MyCampaign {
   contributor_count: number;
   recurrence: "none" | "monthly" | "quarterly" | "yearly";
   recurrence_anchor_day: number | null;
+  latitude: number | null;
+  longitude: number | null;
+  location_name: string | null;
 }
 
 export interface Tier {
@@ -91,6 +94,9 @@ export interface NewCampaignInput {
   visibility: "private" | "unlisted" | "public";
   recurrence?: "none" | "monthly" | "quarterly" | "yearly";
   recurrenceAnchorDay?: number | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  locationName?: string | null;
   metadata?: Record<string, unknown>;
 }
 
@@ -98,6 +104,7 @@ const SELECT =
   "id, slug, title, type, state, visibility, goal_cents, currency, " +
   "destination_address, subject_type, subject_ref, description, " +
   "min_contribution_cents, recurrence, recurrence_anchor_day, " +
+  "latitude, longitude, location_name, " +
   "campaign_stats(total_raised_cents, contributor_count)";
 
 function normalize(row: Record<string, unknown>): MyCampaign {
@@ -121,6 +128,9 @@ function normalize(row: Record<string, unknown>): MyCampaign {
     contributor_count: (stats as Record<string, number>).contributor_count ?? 0,
     recurrence: (row.recurrence as MyCampaign["recurrence"]) ?? "none",
     recurrence_anchor_day: (row.recurrence_anchor_day as number) ?? null,
+    latitude: (row.latitude as number) ?? null,
+    longitude: (row.longitude as number) ?? null,
+    location_name: (row.location_name as string) ?? null,
   };
 }
 
@@ -184,6 +194,9 @@ export async function createCampaign(input: NewCampaignInput): Promise<string> {
         visibility: input.visibility,
         recurrence: input.recurrence ?? "none",
         recurrence_anchor_day: input.recurrenceAnchorDay ?? null,
+        latitude: input.latitude ?? null,
+        longitude: input.longitude ?? null,
+        location_name: input.locationName ?? null,
         state: "draft",
         ...(input.metadata ? { metadata: input.metadata } : {}),
       })
@@ -213,6 +226,9 @@ export async function updateCampaign(
     state: string;
     recurrence: "none" | "monthly" | "quarterly" | "yearly";
     recurrence_anchor_day: number | null;
+    latitude: number | null;
+    longitude: number | null;
+    location_name: string | null;
     cover_image_url: string | null;
     metadata: Record<string, unknown>;
   }>,

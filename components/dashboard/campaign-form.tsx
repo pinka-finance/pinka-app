@@ -22,6 +22,11 @@ export interface CampaignFormValues {
   // fixed day-of-month the payment is expected (monthly only); null = anchor to
   // each member's own first-payment day
   recurrenceAnchorDay: number | null;
+  // optional physical location — campaigns with coordinates show up as markers
+  // on karta Hrvatske (gis.domovina.ai)
+  latitude: number | null;
+  longitude: number | null;
+  locationName: string | null;
 }
 
 const inputCls =
@@ -66,6 +71,20 @@ const RECUR_VALUES: Recurrence[] = ["none", "monthly", "quarterly", "yearly"];
 
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
 
+// "45.1603, 18.0156" (i varijante s razmakom/;) → {lat, lng}; "" → null;
+// sve ostalo → "invalid" pa forma pokaže grešku umjesto da tiho odbaci unos.
+function parseCoords(s: string): { lat: number; lng: number } | null | "invalid" {
+  const txt = s.trim();
+  if (!txt) return null;
+  const parts = txt.split(/[,;\s]+/).filter(Boolean);
+  if (parts.length !== 2) return "invalid";
+  const lat = Number(parts[0]);
+  const lng = Number(parts[1]);
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return "invalid";
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return "invalid";
+  return { lat, lng };
+}
+
 export function CampaignForm({
   initial,
   submitLabel,
@@ -100,6 +119,13 @@ export function CampaignForm({
   const [anchorDay, setAnchorDay] = useState(
     initial?.recurrenceAnchorDay ? String(initial.recurrenceAnchorDay) : "",
   );
+  const [locationName, setLocationName] = useState(initial?.locationName ?? "");
+  const [coords, setCoords] = useState(
+    initial?.latitude != null && initial?.longitude != null
+      ? `${initial.latitude}, ${initial.longitude}`
+      : "",
+  );
+  const [locating, setLocating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -122,6 +148,8 @@ export function CampaignForm({
     const minCents = parseEurToCents(min) ?? 100;
     const goalCents = goal.trim() ? parseEurToCents(goal) : null;
     if (goal.trim() && goalCents === null) return setError(t("form.errGoalInvalid"));
+    const loc = parseCoords(coords);
+    if (loc === "invalid") return setError(t("form.errLocationInvalid"));
     setBusy(true);
     try {
       // anchor day applies to monthly only; clamp to 1..31
@@ -142,6 +170,9 @@ export function CampaignForm({
         visibility,
         recurrence,
         recurrenceAnchorDay: anchor,
+        latitude: loc?.lat ?? null,
+        longitude: loc?.lng ?? null,
+        locationName: locationName.trim() || null,
       });
     } catch (err) {
       console.error(err);
@@ -253,6 +284,49 @@ export function CampaignForm({
             <option key={v} value={v}>{t(`form.visibility.${v}.label`)}</option>
           ))}
         </select>
+      </Field>
+
+      <Field
+        label={t("form.locationLabel")}
+        desc={<Rich>{t("form.locationDesc")}</Rich>}
+      >
+        <div className="space-y-3">
+          <input
+            className={inputCls}
+            value={locationName}
+            onChange={(e) => setLocationName(e.target.value)}
+            placeholder={t("form.locationNamePlaceholder")}
+          />
+          <div className="flex gap-2">
+            <input
+              className={inputCls + " font-mono"}
+              value={coords}
+              onChange={(e) => setCoords(e.target.value)}
+              placeholder={t("form.locationCoordsPlaceholder")}
+            />
+            <button
+              type="button"
+              disabled={locating}
+              onClick={() => {
+                if (!navigator.geolocation) return;
+                setLocating(true);
+                navigator.geolocation.getCurrentPosition(
+                  (pos) => {
+                    setCoords(
+                      `${pos.coords.latitude.toFixed(5)}, ${pos.coords.longitude.toFixed(5)}`,
+                    );
+                    setLocating(false);
+                  },
+                  () => setLocating(false),
+                  { enableHighAccuracy: true, timeout: 10000 },
+                );
+              }}
+              className="shrink-0 rounded-lg border border-ink/15 px-3 py-2 text-xs font-medium hover:border-ink/30 disabled:opacity-50"
+            >
+              {locating ? t("form.locationLocating") : t("form.locationUseMine")}
+            </button>
+          </div>
+        </div>
       </Field>
 
       <Field

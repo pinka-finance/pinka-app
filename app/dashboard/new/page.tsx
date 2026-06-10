@@ -138,6 +138,9 @@ function NewInner() {
       visibility: v.visibility,
       recurrence: v.recurrence,
       recurrenceAnchorDay: v.recurrenceAnchorDay,
+      latitude: v.latitude,
+      longitude: v.longitude,
+      locationName: v.locationName,
       metadata: {
         safe: {
           signer_address: account.signerAddress,
@@ -296,6 +299,9 @@ function NewInner() {
                 visibility: v.visibility,
                 recurrence: v.recurrence,
                 recurrenceAnchorDay: v.recurrenceAnchorDay,
+                latitude: v.latitude,
+                longitude: v.longitude,
+                locationName: v.locationName,
                 metadata: {
                   safe: {
                     signer_address: safe.signerAddress,

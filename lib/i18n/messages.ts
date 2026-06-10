@@ -77,6 +77,8 @@ const hr = {
       "Uplate stižu izravno na Safe kampanje (EURe na Gnosis lancu). Stanje može provjeriti bilo tko — neovisno o nama.",
     eureBalance: "EURe saldo na Gnosisscanu ↗",
     inflowHistory: "Povijest priljeva (transferi) ↗",
+    locationFallback: "Lokacija kampanje",
+    viewOnMap: "prikaži na karti ↗",
     verifiedBadge: "Verificirano · eOsobna",
     verifiedTitle:
       "Identitet potvrđen hrvatskom e-osobnom (Certilia) — 100% verificirana osoba.",
@@ -254,6 +256,8 @@ const hr = {
     errSafeNotDerived: "Safe kampanje još nije izveden — poveži passkey.",
     errAddrRequired: "Odredišna Gnosis adresa (0x… 40 hex) je obavezna.",
     errGoalInvalid: "Neispravan cilj.",
+    errLocationInvalid:
+      "Neispravne koordinate — očekujem „lat, lng” (npr. 45.1603, 18.0156).",
     errSaveFailed: "Spremanje nije uspjelo. Provjeri podatke i pokušaj ponovno.",
     titleLabel: "Naslov kampanje",
     titleDesc:
@@ -308,6 +312,13 @@ const hr = {
     safeDescManual:
       "EURe se prosljeđuje izravno na ovu adresu. Preporuka: Safe kojim sam upravljaš.",
     safeLockedEmpty: "Poveži DOMOVINA wallet u koraku 1.",
+    locationLabel: "Lokacija (opcionalno)",
+    locationDesc:
+      "Gdje se kampanja fizički odvija. Kampanje s koordinatama postaju **markeri na karti Hrvatske** (gis.domovina.ai) — podržavatelji ih pronalaze prostornim pregledom i doniraju jednim klikom. Koordinate zalijepi kao `lat, lng` (u Google Maps: desni klik na mjesto → kopiraj koordinate) ili ih dohvati gumbom.",
+    locationNamePlaceholder: "Naziv mjesta — npr. Slavonski Brod",
+    locationCoordsPlaceholder: "45.1603, 18.0156",
+    locationUseMine: "📍 Moja lokacija",
+    locationLocating: "Tražim…",
     advancedSummary: "Napredno — povezivanje sa sadržajem",
     advancedLinked: "· vezano uz epizodu",
     advancedOptional: "(opcionalno)",
@@ -559,6 +570,8 @@ const en: Messages = {
       "Funds arrive directly to the campaign Safe (EURe on the Gnosis chain). Anyone can check the balance — independently of us.",
     eureBalance: "EURe balance on Gnosisscan ↗",
     inflowHistory: "Inflow history (transfers) ↗",
+    locationFallback: "Campaign location",
+    viewOnMap: "view on the map ↗",
     verifiedBadge: "Verified · eID",
     verifiedTitle:
       "Identity confirmed with the Croatian eID (Certilia) — a 100% verified person.",
@@ -735,6 +748,8 @@ const en: Messages = {
     errSafeNotDerived: "The campaign Safe isn't derived yet — connect a passkey.",
     errAddrRequired: "A destination Gnosis address (0x… 40 hex) is required.",
     errGoalInvalid: "Invalid goal.",
+    errLocationInvalid:
+      "Invalid coordinates — expected “lat, lng” (e.g. 45.1603, 18.0156).",
     errSaveFailed: "Saving failed. Check the data and try again.",
     titleLabel: "Campaign title",
     titleDesc:
@@ -789,6 +804,13 @@ const en: Messages = {
     safeDescManual:
       "EURe is forwarded directly to this address. Recommended: a Safe you control yourself.",
     safeLockedEmpty: "Connect your DOMOVINA wallet in step 1.",
+    locationLabel: "Location (optional)",
+    locationDesc:
+      "Where the campaign physically takes place. Campaigns with coordinates become **markers on the map of Croatia** (gis.domovina.ai) — supporters find them by browsing the map and donate in one click. Paste coordinates as `lat, lng` (in Google Maps: right-click a spot → copy coordinates) or use the button.",
+    locationNamePlaceholder: "Place name — e.g. Slavonski Brod",
+    locationCoordsPlaceholder: "45.1603, 18.0156",
+    locationUseMine: "📍 My location",
+    locationLocating: "Locating…",
     advancedSummary: "Advanced — link to content",
     advancedLinked: "· linked to an episode",
     advancedOptional: "(optional)",

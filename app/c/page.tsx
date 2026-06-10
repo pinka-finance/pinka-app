@@ -2,7 +2,7 @@
 
 import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, Landmark } from "lucide-react";
+import { ShieldCheck, Landmark, MapPin } from "lucide-react";
 import { usePathname, useSearchParams } from "next/navigation";
 import {
   getCampaignBySlug,
@@ -116,6 +116,20 @@ function CampaignInner() {
           )}
           <span className="eyebrow">{t(campaignTypeKey(campaign.type))}</span>
           <h1 className="mt-5 text-display-md font-display font-semibold">{campaign.title}</h1>
+          {campaign.latitude != null && campaign.longitude != null ? (
+            // Kampanja s koordinatama je marker na karti Hrvatske — link vodi na
+            // sloj "Pinka kampanje" fokusiran na ovu kampanju (?c={slug}).
+            <a
+              href={`https://gis.domovina.ai/kampanje?c=${encodeURIComponent(campaign.slug)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-ink/10 bg-white/70 px-3 py-1.5 text-xs font-medium text-inkSoft transition-colors hover:border-coral/40 hover:text-ink"
+            >
+              <MapPin className="h-3.5 w-3.5 text-coral" />
+              {campaign.location_name?.trim() || t("campaign.locationFallback")}
+              <span className="text-inkMuted">· {t("campaign.viewOnMap")}</span>
+            </a>
+          ) : null}
           {campaign.description ? (
             <p className="mt-5 whitespace-pre-line leading-relaxed text-inkSoft">{campaign.description}</p>
           ) : null}
