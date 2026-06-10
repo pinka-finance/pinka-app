@@ -453,6 +453,19 @@ const hr = {
       "**Bez naknada unaprijed.** Adresa računa prima novac od prvog dana, a na lancu se račun stvara tek pri prvoj isplati — pa nema troška dok kampanja ne proradi.",
     bullet4:
       "**Pratiš sve u walletu.** Svaka kampanja ti se u DOMOVINA walletu vodi kao zaseban račun, sa stanjem i prometom u stvarnom vremenu — kao u bankovnoj aplikaciji.",
+    openSourceTitle: "100% otvoreni kod",
+    openSourceBody:
+      "Transparentnost ne staje na lancu — vrijedi i za softver. Sve što ovdje vidiš je **javno i otvoreno (MIT licenca)**: aplikacija, wallet, pa i landing. Kod možeš pročitati, provjeriti i pokrenuti sam:",
+    repoApp: "pinka aplikacija — ova stranica: kampanje, checkout, dashboard",
+    repoWallet: "DOMOVINA wallet — passkey novčanik i SEPA ↔ EURe rail",
+    repoLanding: "pinka.finance — landing stranica",
+    repoMvp: "pinka MVP — pametni ugovori i rani eksperimenti",
+    whiteLabelTitle: "Napravi svoju Pinku",
+    whiteLabelBody:
+      "Želiš **vlastitu platformu za kampanje ili vlastiti wallet pod svojim brandom** — za udrugu, župu, klub, medij ili zajednicu? Forkaj i prilagodi: boje, ime, domena — sve je tvoje.",
+    consultingBody:
+      "A ako želiš da to **napravimo mi**: postavljanje tvoje platforme s tvojim brandingom nudimo kao paketiranu uslugu razvojnog konzaltinga — ti dobiješ platformu ključ u ruke (i uredan konzultantski račun), mi se pobrinemo za sve tehničko.",
+    contactCta: "Javi nam se",
     ctaTitle: "Spreman pokrenuti kampanju?",
     cta: "Kreiraj kampanju",
     diagramLoading: "Učitavam dijagram…",
@@ -899,6 +912,19 @@ const en: Messages = {
       "**No upfront fees.** The account address receives money from day one, while the account itself is created on-chain only at the first payout — so there's no cost until the campaign takes off.",
     bullet4:
       "**You track everything in the wallet.** Each campaign shows up in your DOMOVINA wallet as a separate account, with its balance and activity in real time — like in a banking app.",
+    openSourceTitle: "100% open source",
+    openSourceBody:
+      "Transparency doesn't stop at the chain — it applies to the software too. Everything you see here is **public and open (MIT license)**: the app, the wallet, even the landing page. You can read, audit and run the code yourself:",
+    repoApp: "pinka app — this site: campaigns, checkout, dashboard",
+    repoWallet: "DOMOVINA wallet — passkey wallet and the SEPA ↔ EURe rail",
+    repoLanding: "pinka.finance — landing page",
+    repoMvp: "pinka MVP — smart contracts and early experiments",
+    whiteLabelTitle: "Build your own Pinka",
+    whiteLabelBody:
+      "Want **your own campaign platform or your own wallet under your brand** — for an association, parish, club, media outlet or community? Fork and customize: colors, name, domain — it's all yours.",
+    consultingBody:
+      "And if you'd rather **we build it for you**: we offer setting up your branded platform as a productized development-consulting service — you get a turnkey platform (and a proper consulting invoice), we take care of everything technical.",
+    contactCta: "Get in touch",
     ctaTitle: "Ready to start a campaign?",
     cta: "Create a campaign",
     diagramLoading: "Loading diagram…",

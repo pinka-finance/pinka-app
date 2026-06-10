@@ -1,7 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { KeyRound, Banknote, ArrowDownToLine, ShieldCheck } from "lucide-react";
+import {
+  KeyRound,
+  Banknote,
+  ArrowDownToLine,
+  ShieldCheck,
+  Github,
+  ExternalLink,
+  Mail,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { MermaidDiagram } from "@/components/mermaid-diagram";
 import { useI18n, Rich } from "@/lib/i18n";
@@ -10,7 +18,20 @@ import type { ReactNode } from "react";
 
 // Public explainer: every campaign = its own on-chain account (Safe multisig
 // on Gnosis) inside the creator's DOMOVINA wallet — told like a banking app,
-// with Mermaid diagrams for the identity/donation/payout flows.
+// with Mermaid diagrams for the identity/donation/payout flows. Closes with
+// the open-source section: public repos + white-label/consulting offer.
+
+const CONTACT_MAILTO =
+  "mailto:hello@pinka.finance?subject=Vlastita%20platforma%20(white-label)";
+
+// Public GitHub repos shown in the open-source section; descKey lives in the
+// i18n catalogue (howItWorks.repo*).
+const REPOS = [
+  { url: "https://github.com/pinka-finance/pinka-app", name: "pinka-finance/pinka-app", descKey: "repoApp" },
+  { url: "https://github.com/domovinatv/pay.domovina.ai", name: "domovinatv/pay.domovina.ai", descKey: "repoWallet" },
+  { url: "https://github.com/pinka-finance/landing", name: "pinka-finance/landing", descKey: "repoLanding" },
+  { url: "https://github.com/pinka-finance/pinka-finance-mvp", name: "pinka-finance/pinka-finance-mvp", descKey: "repoMvp" },
+] as const;
 
 function Section({
   icon,
@@ -75,6 +96,49 @@ export default function HowItWorksPage() {
             </li>
           ))}
         </ul>
+      </Section>
+
+      <Section icon={<Github className="h-5 w-5" />} title={t("howItWorks.openSourceTitle")}>
+        <p>
+          <Rich>{t("howItWorks.openSourceBody")}</Rich>
+        </p>
+        <ul className="space-y-2">
+          {REPOS.map((r) => (
+            <li key={r.url}>
+              <a
+                href={r.url}
+                target="_blank"
+                rel="noreferrer"
+                className="group flex items-start gap-2 rounded-lg border border-ink/8 bg-white/40 px-3 py-2.5 transition-colors hover:border-ink/20"
+              >
+                <Github className="mt-0.5 h-4 w-4 shrink-0 text-inkMuted" />
+                <span>
+                  <span className="font-mono text-xs font-medium text-ink group-hover:underline">
+                    {r.name}
+                  </span>
+                  <span className="mt-0.5 block text-xs text-inkMuted">
+                    {t(`howItWorks.${r.descKey}`)}
+                  </span>
+                </span>
+                <ExternalLink className="ml-auto mt-0.5 h-3.5 w-3.5 shrink-0 text-inkMuted" />
+              </a>
+            </li>
+          ))}
+        </ul>
+        <div className="rounded-lg bg-teal/5 px-4 py-3">
+          <p className="font-medium text-ink">{t("howItWorks.whiteLabelTitle")}</p>
+          <p className="mt-1">
+            <Rich>{t("howItWorks.whiteLabelBody")}</Rich>
+          </p>
+          <p className="mt-2">
+            <Rich>{t("howItWorks.consultingBody")}</Rich>
+          </p>
+          <Button asChild variant="outline" size="sm" className="mt-3">
+            <a href={CONTACT_MAILTO}>
+              <Mail className="h-4 w-4" /> {t("howItWorks.contactCta")}
+            </a>
+          </Button>
+        </div>
       </Section>
 
       <div className="mt-12 rounded-lg border border-ink/8 bg-sand/40 p-6 text-center">
