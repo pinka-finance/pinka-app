@@ -160,6 +160,16 @@ const hr = {
   },
   auth: {
     title: "Prijava za kreatore",
+    intro: "Odaberi način prijave — svi vode na isti račun.",
+    passkey: "Prijava passkeyom",
+    passkeySub: "Najbrže — Face ID / otisak, bez lozinke",
+    passkeyBusy: "Provjeravam passkey…",
+    passkeyNone:
+      "Na ovom uređaju nema passkeya za pinka.io — prijavi se drugom metodom, pa ga dodaj u Mojim kampanjama.",
+    passkeyError: "Prijava passkeyom nije uspjela. Pokušaj ponovno.",
+    google: "Nastavi s Googleom",
+    apple: "Nastavi s Appleom",
+    oauthError: "Prijava nije uspjela. Pokušaj ponovno.",
     emailIntro: "Upiši e-mail — pošaljemo ti kod (i poveznicu) za prijavu.",
     or: "ili",
     certilia: "Prijava eOsobnom",
@@ -188,6 +198,14 @@ const hr = {
     signInError: "Prijava eOsobnom nije uspjela ili je otkazana.",
     signOut: "Odjava",
   },
+  kyc: {
+    checking: "Provjeravam identitet…",
+    title: "Za kreiranje kampanje treba eOsobna",
+    intro:
+      "Kampanju na pinki može otvoriti **isključivo osoba prijavljena hrvatskom e-osobnom** (Certilia Mobile ID). Time je identitet kreatora službeno potvrđen (KYC/AML) i točno se zna tko je odgovoran za kampanju. Za pregled i podršku kampanjama dovoljna je obična prijava.",
+    signedInAs:
+      "Trenutno si prijavljen kao {email} — nakon prijave eOsobnom nastavljaš kao verificirani korisnik.",
+  },
   states: {
     draft: "nacrt",
     active: "aktivna",
@@ -201,6 +219,10 @@ const hr = {
     signOut: "Odjava",
     loadFailed: "Učitavanje kampanja nije uspjelo.",
     empty: "Još nemaš kampanja. Kreiraj prvu.",
+    addPasskey: "Dodaj passkey",
+    addPasskeyBusy: "Spremam passkey…",
+    addPasskeyDone: "Passkey dodan — idući put prijava otiskom/Face ID-em.",
+    addPasskeyError: "Dodavanje passkeya nije uspjelo. Pokušaj ponovno.",
   },
   dashboardNew: {
     title: "Nova kampanja",
@@ -620,6 +642,16 @@ const en: Messages = {
   },
   auth: {
     title: "Creator sign-in",
+    intro: "Pick a sign-in method — they all lead to the same account.",
+    passkey: "Sign in with a passkey",
+    passkeySub: "Fastest — Face ID / fingerprint, no password",
+    passkeyBusy: "Checking passkey…",
+    passkeyNone:
+      "No passkey for pinka.io on this device — sign in another way, then add one in My campaigns.",
+    passkeyError: "Passkey sign-in failed. Please try again.",
+    google: "Continue with Google",
+    apple: "Continue with Apple",
+    oauthError: "Sign-in failed. Please try again.",
     emailIntro: "Enter your email — we'll send you a code (and a link) to sign in.",
     or: "or",
     certilia: "Sign in with eID",
@@ -647,6 +679,14 @@ const en: Messages = {
     signInError: "eID sign-in failed or was cancelled.",
     signOut: "Sign out",
   },
+  kyc: {
+    checking: "Checking identity…",
+    title: "Creating a campaign requires the Croatian eID",
+    intro:
+      "A campaign on pinka can only be opened by **a person signed in with the Croatian eID** (Certilia Mobile ID). That officially confirms the creator's identity (KYC/AML), so it is always clear who is responsible for the campaign. Browsing and supporting campaigns works with any sign-in.",
+    signedInAs:
+      "You're currently signed in as {email} — after the eID sign-in you continue as your verified account.",
+  },
   states: {
     draft: "draft",
     active: "active",
@@ -660,6 +700,10 @@ const en: Messages = {
     signOut: "Sign out",
     loadFailed: "Failed to load campaigns.",
     empty: "You don't have any campaigns yet. Create your first one.",
+    addPasskey: "Add a passkey",
+    addPasskeyBusy: "Saving passkey…",
+    addPasskeyDone: "Passkey added — next time sign in with Face ID / fingerprint.",
+    addPasskeyError: "Adding the passkey failed. Please try again.",
   },
   dashboardNew: {
     title: "New campaign",

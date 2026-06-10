@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { Fingerprint, Loader2 } from "lucide-react";
 import { AuthGate, useAuth } from "@/lib/auth";
+import { registerPasskey } from "@/lib/passkey-login";
 import { Button } from "@/components/ui/button";
 import { fmtEur } from "@/lib/format";
 import { useI18n } from "@/lib/i18n";
@@ -50,6 +52,7 @@ function DashboardInner() {
           <p className="mt-1 text-sm text-inkMuted">{user?.email}</p>
         </div>
         <div className="flex items-center gap-3">
+          <AddPasskeyButton />
           <Button asChild>
             <Link href="/dashboard/new">{t("dashboard.newCampaign")}</Link>
           </Button>
@@ -92,6 +95,45 @@ function DashboardInner() {
         </div>
       )}
     </div>
+  );
+}
+
+/// Passkeyi su per-domena (RP = pinka.io) — i korisnik koji ima passkey na
+/// domovina.ai mora ovdje dodati svoj. Jedan klik, WebAuthn registracija ide na
+/// isti backend (edge fn `passkey`), račun ostaje isti.
+function AddPasskeyButton() {
+  const { t } = useI18n();
+  const [state, setState] = useState<"idle" | "busy" | "done" | "error">("idle");
+
+  if (state === "done") {
+    return <p className="text-xs text-teal-700">{t("dashboard.addPasskeyDone")}</p>;
+  }
+
+  async function add() {
+    setState("busy");
+    try {
+      await registerPasskey();
+      setState("done");
+    } catch {
+      setState("error");
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={add}
+      disabled={state === "busy"}
+      title={state === "error" ? t("dashboard.addPasskeyError") : undefined}
+      className="inline-flex items-center gap-1.5 rounded-full border border-ink/15 px-3 py-1.5 text-xs font-medium text-inkMuted transition-colors hover:border-ink/30 hover:text-ink disabled:opacity-50"
+    >
+      {state === "busy" ? (
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+      ) : (
+        <Fingerprint className="h-3.5 w-3.5" />
+      )}
+      {state === "busy" ? t("dashboard.addPasskeyBusy") : t("dashboard.addPasskey")}
+    </button>
   );
 }
 

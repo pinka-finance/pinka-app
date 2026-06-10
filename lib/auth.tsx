@@ -8,12 +8,16 @@ import {
   type ReactNode,
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
-import { ShieldCheck } from "lucide-react";
+import { Fingerprint, Loader2, ShieldCheck } from "lucide-react";
 import { supabaseBrowser } from "@/lib/supabase";
 import { signInWithCertilia as runCertiliaLogin } from "@/lib/certilia";
+import {
+  signInWithPasskey as runPasskeyLogin,
+  PasskeyError,
+} from "@/lib/passkey-login";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/logo";
-import { useI18n } from "@/lib/i18n";
+import { useI18n, Rich } from "@/lib/i18n";
 
 /// Safe subset returned by public.my_identity_status() — OIB/DOB never leave the
 /// backend. `verified: true` means the user signed in with their Croatian eID
@@ -38,6 +42,12 @@ interface AuthState {
   /// Login with the Croatian eID (Certilia MobileID). Resolves once the Supabase
   /// session is established; identity is then refreshed via onAuthStateChange.
   signInWithCertilia: () => Promise<void>;
+  /// Login with an existing passkey (WebAuthn, RP = pinka.io). Same email_otp
+  /// session bridge as Certilia — see lib/passkey-login.ts.
+  signInWithPasskey: () => Promise<void>;
+  /// Google/Apple OAuth via the shared GoTrue (api.domovina.ai). Full-page
+  /// redirect; the session lands back on /dashboard (detectSessionInUrl).
+  signInWithOAuth: (provider: "google" | "apple") => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -70,7 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       const { data, error } = await supabaseBrowser().rpc("my_identity_status");
       if (error) {
-        setIdentity(null);
+        // Signed-in user whose status we couldn't fetch — treat as unverified
+        // (gates stay closed) rather than unknown; eID login retries anyway.
+        setIdentity({ verified: false });
         return;
       }
       setIdentity((data as IdentityStatus) ?? { verified: false });
@@ -109,6 +121,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // onAuthStateChange refreshes `identity` above.
       await runCertiliaLogin();
     },
+    signInWithPasskey: async () => {
+      await runPasskeyLogin();
+    },
+    signInWithOAuth: async (provider: "google" | "apple") => {
+      const sb = supabaseBrowser();
+      const { error } = await sb.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/dashboard`,
+        },
+      });
+      if (error) throw error;
+      // The browser navigates away to the provider; nothing more to do here.
+    },
     signOut: async () => {
       await supabaseBrowser().auth.signOut();
     },
@@ -121,6 +147,74 @@ export function useAuth(): AuthState {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
   return ctx;
+}
+
+/// Gate koji traži KYC-verificiranog korisnika (prijava Certilia Mobile ID-jem).
+/// Koristi se UNUTAR AuthGate-a na kreiranju kampanje: bilo koji login otvara
+/// dashboard, ali kampanju smije kreirati isključivo eOsobnom verificiran
+/// korisnik (implicitni KYC/AML — enforcano i server-side RLS-om na INSERT).
+export function VerifiedGate({ children }: { children: ReactNode }) {
+  const { identity, signInWithCertilia, user } = useAuth();
+  const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // identity stiže async nakon prijave (rpc my_identity_status).
+  if (!identity) {
+    return (
+      <div className="container-content py-24 text-center text-inkMuted">
+        {t("kyc.checking")}
+      </div>
+    );
+  }
+  if (identity.verified) return <>{children}</>;
+
+  async function doCertilia() {
+    setBusy(true);
+    setError(null);
+    try {
+      await signInWithCertilia();
+      // success → session prelazi na verificirani (kyc) račun i identity se
+      // osvježi kroz onAuthStateChange; gate se sam otvara.
+    } catch {
+      setError(t("auth.certiliaError"));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="container-content py-20">
+      <div className="mx-auto max-w-md card-base">
+        <Logo />
+        <h1 className="mt-5 text-2xl font-display font-semibold">
+          {t("kyc.title")}
+        </h1>
+        <p className="mt-3 text-sm leading-relaxed text-inkMuted">
+          <Rich>{t("kyc.intro")}</Rich>
+        </p>
+        <button
+          type="button"
+          onClick={doCertilia}
+          disabled={busy}
+          className={`mt-6 ${providerBtnCls}`}
+        >
+          {busy ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ShieldCheck className="h-4 w-4 text-teal-700" />
+          )}
+          {busy ? t("auth.certiliaBusy") : t("auth.certilia")}
+        </button>
+        {user?.email ? (
+          <p className="mt-3 text-center text-xs text-inkMuted">
+            {t("kyc.signedInAs", { email: user.email })}
+          </p>
+        ) : null}
+        {error ? <p className="mt-3 text-sm text-rust">{error}</p> : null}
+      </div>
+    </div>
+  );
 }
 
 /// Gate koji traži prijavljenog (NE-anonimnog) korisnika; inače pokazuje
@@ -141,8 +235,49 @@ export function AuthGate({ children }: { children: ReactNode }) {
   return <>{children}</>;
 }
 
+// Inline brand glyphs — lucide nema (ne-deprecated) Google/Apple ikone.
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden>
+      <path
+        fill="#4285F4"
+        d="M23.5 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.45a5.52 5.52 0 0 1-2.39 3.62v3h3.87c2.26-2.09 3.57-5.17 3.57-8.81Z"
+      />
+      <path
+        fill="#34A853"
+        d="M12 24c3.24 0 5.96-1.07 7.93-2.91l-3.87-3a7.18 7.18 0 0 1-10.8-3.78H1.27v3.1A12 12 0 0 0 12 24Z"
+      />
+      <path
+        fill="#FBBC05"
+        d="M5.26 14.3a7.2 7.2 0 0 1 0-4.6V6.6H1.27a12 12 0 0 0 0 10.8l3.99-3.1Z"
+      />
+      <path
+        fill="#EA4335"
+        d="M12 4.77c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.97 11.97 0 0 0 1.27 6.6l3.99 3.1A7.18 7.18 0 0 1 12 4.77Z"
+      />
+    </svg>
+  );
+}
+
+function AppleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden>
+      <path d="M16.36 12.95c.03 3.04 2.67 4.05 2.7 4.06-.02.07-.42 1.45-1.4 2.86-.84 1.23-1.71 2.45-3.09 2.47-1.35.03-1.79-.8-3.34-.8-1.55 0-2.03.78-3.31.83-1.33.05-2.34-1.32-3.19-2.54-1.73-2.5-3.05-7.07-1.28-10.16a4.95 4.95 0 0 1 4.18-2.54c1.3-.02 2.54.88 3.34.88.8 0 2.3-1.09 3.87-.93.66.03 2.51.27 3.7 2-.1.06-2.21 1.3-2.18 3.87ZM13.8 4.43c.71-.86 1.19-2.06 1.06-3.25-1.02.04-2.26.68-2.99 1.54-.66.76-1.24 1.98-1.08 3.15 1.14.09 2.3-.58 3.01-1.44Z" />
+    </svg>
+  );
+}
+
+const providerBtnCls =
+  "flex w-full items-center justify-center gap-2 rounded-full border border-ink/15 px-4 py-3 text-sm font-medium transition-colors hover:border-ink/30 disabled:opacity-50";
+
 function SignIn() {
-  const { signInWithEmail, verifyEmailOtp, signInWithCertilia } = useAuth();
+  const {
+    signInWithEmail,
+    verifyEmailOtp,
+    signInWithCertilia,
+    signInWithPasskey,
+    signInWithOAuth,
+  } = useAuth();
   const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
@@ -151,18 +286,47 @@ function SignIn() {
   const [step, setStep] = useState<"email" | "code">("email");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [certBusy, setCertBusy] = useState(false);
+  // One provider ceremony at a time: "passkey" | "certilia" | "google" | "apple".
+  const [provBusy, setProvBusy] = useState<string | null>(null);
+
+  async function doPasskey() {
+    setProvBusy("passkey");
+    setError(null);
+    try {
+      await signInWithPasskey();
+      // success → AuthGate re-renders children (session is now non-anon).
+    } catch (e) {
+      setError(
+        e instanceof PasskeyError && e.noCredential
+          ? t("auth.passkeyNone")
+          : t("auth.passkeyError"),
+      );
+    } finally {
+      setProvBusy(null);
+    }
+  }
 
   async function doCertilia() {
-    setCertBusy(true);
+    setProvBusy("certilia");
     setError(null);
     try {
       await signInWithCertilia();
-      // success → AuthGate re-renders children (session is now non-anon).
     } catch {
       setError(t("auth.certiliaError"));
     } finally {
-      setCertBusy(false);
+      setProvBusy(null);
+    }
+  }
+
+  async function doOAuth(provider: "google" | "apple") {
+    setProvBusy(provider);
+    setError(null);
+    try {
+      await signInWithOAuth(provider);
+      // Page navigates to the provider — keep the spinner until then.
+    } catch {
+      setError(t("auth.oauthError"));
+      setProvBusy(null);
     }
   }
 
@@ -216,8 +380,80 @@ function SignIn() {
 
         {step === "email" ? (
           <>
-            <p className="mt-2 text-sm text-inkMuted">{t("auth.emailIntro")}</p>
-            <form onSubmit={sendCode} className="mt-6 space-y-3">
+            <p className="mt-2 text-sm text-inkMuted">{t("auth.intro")}</p>
+
+            <div className="mt-6 space-y-2.5">
+              <button
+                type="button"
+                onClick={doPasskey}
+                disabled={provBusy !== null}
+                className={providerBtnCls}
+              >
+                {provBusy === "passkey" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Fingerprint className="h-4 w-4 text-coral-700" />
+                )}
+                {provBusy === "passkey" ? t("auth.passkeyBusy") : t("auth.passkey")}
+              </button>
+              <p className="-mt-1 text-center text-xs text-inkMuted">
+                {t("auth.passkeySub")}
+              </p>
+
+              <button
+                type="button"
+                onClick={doCertilia}
+                disabled={provBusy !== null}
+                className={providerBtnCls}
+              >
+                {provBusy === "certilia" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <ShieldCheck className="h-4 w-4 text-teal-700" />
+                )}
+                {provBusy === "certilia" ? t("auth.certiliaBusy") : t("auth.certilia")}
+              </button>
+              <p className="-mt-1 text-center text-xs text-inkMuted">
+                {t("auth.certiliaSub")}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => void doOAuth("google")}
+                disabled={provBusy !== null}
+                className={providerBtnCls}
+              >
+                {provBusy === "google" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <GoogleIcon />
+                )}
+                {t("auth.google")}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => void doOAuth("apple")}
+                disabled={provBusy !== null}
+                className={providerBtnCls}
+              >
+                {provBusy === "apple" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <AppleIcon />
+                )}
+                {t("auth.apple")}
+              </button>
+            </div>
+
+            <div className="my-5 flex items-center gap-3 text-xs text-inkMuted">
+              <span className="h-px flex-1 bg-ink/10" />
+              {t("auth.or")}
+              <span className="h-px flex-1 bg-ink/10" />
+            </div>
+
+            <p className="text-sm text-inkMuted">{t("auth.emailIntro")}</p>
+            <form onSubmit={sendCode} className="mt-3 space-y-3">
               <input
                 type="email"
                 required
@@ -226,30 +462,11 @@ function SignIn() {
                 placeholder={t("auth.emailPlaceholder")}
                 className="w-full rounded-full border border-ink/15 px-4 py-3 text-sm focus:border-ink/30 focus:outline-none"
               />
-              {error ? <p className="text-sm text-rust">{error}</p> : null}
-              <Button type="submit" disabled={busy} className="w-full">
+              <Button type="submit" disabled={busy || provBusy !== null} className="w-full">
                 {busy ? t("auth.sending") : t("auth.sendCode")}
               </Button>
             </form>
-
-            <div className="my-5 flex items-center gap-3 text-xs text-inkMuted">
-              <span className="h-px flex-1 bg-ink/10" />
-              {t("auth.or")}
-              <span className="h-px flex-1 bg-ink/10" />
-            </div>
-
-            <button
-              type="button"
-              onClick={doCertilia}
-              disabled={certBusy}
-              className="flex w-full items-center justify-center gap-2 rounded-full border border-ink/15 px-4 py-3 text-sm font-medium transition-colors hover:border-ink/30 disabled:opacity-50"
-            >
-              <ShieldCheck className="h-4 w-4 text-teal-700" />
-              {certBusy ? t("auth.certiliaBusy") : t("auth.certilia")}
-            </button>
-            <p className="mt-1.5 text-center text-xs text-inkMuted">
-              {t("auth.certiliaSub")}
-            </p>
+            {error ? <p className="mt-3 text-sm text-rust">{error}</p> : null}
           </>
         ) : (
           <>
