@@ -49,7 +49,7 @@
   }
 
   .card-base {
-    @apply rounded-lg border border-ink/8 bg-white/60 p-6 sm:p-7 transition-all duration-300;
+    @apply rounded-lg border border-ink/8 bg-white/70 p-6 shadow-soft transition-all duration-300 sm:p-8;
   }
 }
 

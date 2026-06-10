@@ -105,8 +105,8 @@ function CampaignInner() {
       : null;
 
   return (
-    <div className="container-content py-12">
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-[1fr_380px]">
+    <div className="container-content py-14">
+      <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1fr_380px]">
         <div>
           {campaign.cover_image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
@@ -115,19 +115,19 @@ function CampaignInner() {
             <div className="mb-6 h-64 w-full rounded-lg bg-gradient-to-br from-coral-100 to-teal-100" />
           )}
           <span className="eyebrow">{t(campaignTypeKey(campaign.type))}</span>
-          <h1 className="mt-4 text-display-md font-display font-semibold">{campaign.title}</h1>
+          <h1 className="mt-5 text-display-md font-display font-semibold">{campaign.title}</h1>
           {campaign.description ? (
-            <p className="mt-4 whitespace-pre-line text-inkSoft">{campaign.description}</p>
+            <p className="mt-5 whitespace-pre-line leading-relaxed text-inkSoft">{campaign.description}</p>
           ) : null}
 
           {contributions.length > 0 ? (
-            <section className="mt-10">
+            <section className="mt-14">
               <h2 className="text-lg font-display font-semibold">{t("campaign.supportWall")}</h2>
-              <ul className="mt-4 space-y-3">
+              <ul className="mt-5 space-y-4">
                 {contributions.map((c) => (
                   <li
                     key={c.id}
-                    className={"card-base !p-4 " + (flashIds.has(c.id) ? "pinka-arrive" : "")}
+                    className={"card-base !p-5 " + (flashIds.has(c.id) ? "pinka-arrive" : "")}
                   >
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 font-medium">
@@ -161,7 +161,7 @@ function CampaignInner() {
                       <span className="text-coral-700">{fmtEur(c.amount_cents)} €</span>
                     </div>
                     {c.message ? (
-                      <p className="mt-1 whitespace-pre-line text-sm text-inkMuted">
+                      <p className="mt-2 whitespace-pre-line text-sm leading-relaxed text-inkMuted">
                         <Linkify text={c.message} />
                       </p>
                     ) : null}
@@ -173,7 +173,7 @@ function CampaignInner() {
                         href={c.link_preview.url}
                         target="_blank"
                         rel="nofollow noopener noreferrer"
-                        className="mt-2 block overflow-hidden rounded-lg border border-ink/10 bg-white/70 transition-colors hover:border-coral/40"
+                        className="mt-3 block overflow-hidden rounded-lg border border-ink/10 bg-white/70 transition-colors hover:border-coral/40"
                       >
                         {c.link_preview.image ? (
                           // eslint-disable-next-line @next/next/no-img-element
@@ -210,20 +210,20 @@ function CampaignInner() {
           ) : null}
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-6 lg:self-start">
+        <aside className="space-y-6 lg:sticky lg:top-8 lg:self-start">
           <div className="card-base">
             <p className="text-3xl font-display font-semibold">{fmtEur(stats.total_raised_cents)} €</p>
             {goal_cents ? (
               <>
-                <p className="mt-1 text-sm text-inkMuted">{t("campaign.ofGoal", { goal: fmtEur(goal_cents) })}</p>
-                <div className="mt-4 h-2.5 overflow-hidden rounded-full bg-sand">
+                <p className="mt-1.5 text-sm text-inkMuted">{t("campaign.ofGoal", { goal: fmtEur(goal_cents) })}</p>
+                <div className="mt-5 h-2.5 overflow-hidden rounded-full bg-sand">
                   <div className="h-full bg-coral" style={{ width: `${pct}%` }} />
                 </div>
               </>
             ) : (
-              <p className="mt-1 text-sm text-inkMuted">{t("campaign.collected")}</p>
+              <p className="mt-1.5 text-sm text-inkMuted">{t("campaign.collected")}</p>
             )}
-            <p className="mt-3 text-sm text-inkMuted">
+            <p className="mt-4 text-sm text-inkMuted">
               {t("units.supporters", { count: stats.contributor_count })} ·{" "}
               {t("units.contributions", { count: stats.contribution_count })}
             </p>
@@ -246,10 +246,10 @@ function CampaignInner() {
           {campaign.destination_address ? (
             <div className="card-base">
               <h3 className="text-sm font-display font-semibold">{t("campaign.verifyTitle")}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-inkMuted">
+              <p className="mt-2 text-xs leading-relaxed text-inkMuted">
                 {t("campaign.verifyDesc")}
               </p>
-              <div className="mt-3 flex flex-col gap-1.5">
+              <div className="mt-4 flex flex-col gap-2">
                 <a
                   href={`https://gnosisscan.io/token/${EURE_GNOSIS}?a=${campaign.destination_address}`}
                   target="_blank"
@@ -267,7 +267,7 @@ function CampaignInner() {
                   {t("campaign.inflowHistory")}
                 </a>
               </div>
-              <p className="mt-2 break-all font-mono text-[11px] text-inkMuted">
+              <p className="mt-3 break-all font-mono text-[11px] text-inkMuted">
                 {campaign.destination_address}
               </p>
             </div>

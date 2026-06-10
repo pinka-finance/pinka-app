@@ -187,31 +187,31 @@ export function VerifiedGate({ children }: { children: ReactNode }) {
     <div className="container-content py-20">
       <div className="mx-auto max-w-md card-base">
         <Logo />
-        <h1 className="mt-5 text-2xl font-display font-semibold">
+        <h1 className="mt-7 text-2xl font-display font-semibold">
           {t("kyc.title")}
         </h1>
         <p className="mt-3 text-sm leading-relaxed text-inkMuted">
           <Rich>{t("kyc.intro")}</Rich>
         </p>
-        <button
-          type="button"
-          onClick={doCertilia}
-          disabled={busy}
-          className={`mt-6 ${providerBtnCls}`}
-        >
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <ShieldCheck className="h-4 w-4 text-teal-700" />
-          )}
-          {busy ? t("auth.certiliaBusy") : t("auth.certilia")}
-        </button>
+        <div className="mt-8">
+          <ProviderTile
+            icon={<ShieldCheck className="h-5 w-5 text-teal-700" />}
+            label={t("auth.certilia")}
+            sub={t("auth.certiliaSub")}
+            busy={busy}
+            busyLabel={t("auth.certiliaBusy")}
+            disabled={busy}
+            onClick={() => void doCertilia()}
+          />
+        </div>
         {user?.email ? (
-          <p className="mt-3 text-center text-xs text-inkMuted">
+          <p className="mt-4 text-center text-xs leading-relaxed text-inkMuted">
             {t("kyc.signedInAs", { email: user.email })}
           </p>
         ) : null}
-        {error ? <p className="mt-3 text-sm text-rust">{error}</p> : null}
+        {error ? (
+          <p className="mt-4 text-sm leading-relaxed text-rust">{error}</p>
+        ) : null}
       </div>
     </div>
   );
@@ -267,8 +267,46 @@ function AppleIcon() {
   );
 }
 
-const providerBtnCls =
-  "flex w-full items-center justify-center gap-2 rounded-full border border-ink/15 px-4 py-3 text-sm font-medium transition-colors hover:border-ink/30 disabled:opacity-50";
+// Premium provider tile: round icon chip left, label (+ optional sub) right.
+// Same visual language as the campaign cards (soft shadow, lift on hover).
+function ProviderTile({
+  icon,
+  label,
+  sub,
+  busy,
+  busyLabel,
+  disabled,
+  onClick,
+}: {
+  icon: ReactNode;
+  label: string;
+  sub?: string;
+  busy?: boolean;
+  busyLabel?: string;
+  disabled?: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full items-center gap-4 rounded-lg border border-ink/10 bg-white/80 px-4 py-3.5 text-left shadow-soft transition-all hover:-translate-y-px hover:border-ink/20 hover:shadow-lift disabled:pointer-events-none disabled:opacity-50"
+    >
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-sand">
+        {busy ? <Loader2 className="h-5 w-5 animate-spin text-inkMuted" /> : icon}
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-medium text-ink">
+          {busy && busyLabel ? busyLabel : label}
+        </span>
+        {sub ? (
+          <span className="mt-0.5 block text-xs text-inkMuted">{sub}</span>
+        ) : null}
+      </span>
+    </button>
+  );
+}
 
 function SignIn() {
   const {
@@ -374,108 +412,85 @@ function SignIn() {
     <div className="container-content py-20">
       <div className="mx-auto max-w-md card-base">
         <Logo />
-        <h1 className="mt-5 text-2xl font-display font-semibold">
+        <h1 className="mt-7 text-2xl font-display font-semibold">
           {t("auth.title")}
         </h1>
 
         {step === "email" ? (
           <>
-            <p className="mt-2 text-sm text-inkMuted">{t("auth.intro")}</p>
+            <p className="mt-3 text-sm leading-relaxed text-inkMuted">
+              {t("auth.intro")}
+            </p>
 
-            <div className="mt-6 space-y-2.5">
-              <button
-                type="button"
-                onClick={doPasskey}
+            <div className="mt-8 space-y-3">
+              <ProviderTile
+                icon={<Fingerprint className="h-5 w-5 text-coral-700" />}
+                label={t("auth.passkey")}
+                sub={t("auth.passkeySub")}
+                busy={provBusy === "passkey"}
+                busyLabel={t("auth.passkeyBusy")}
                 disabled={provBusy !== null}
-                className={providerBtnCls}
-              >
-                {provBusy === "passkey" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <Fingerprint className="h-4 w-4 text-coral-700" />
-                )}
-                {provBusy === "passkey" ? t("auth.passkeyBusy") : t("auth.passkey")}
-              </button>
-              <p className="-mt-1 text-center text-xs text-inkMuted">
-                {t("auth.passkeySub")}
-              </p>
-
-              <button
-                type="button"
-                onClick={doCertilia}
+                onClick={() => void doPasskey()}
+              />
+              <ProviderTile
+                icon={<ShieldCheck className="h-5 w-5 text-teal-700" />}
+                label={t("auth.certilia")}
+                sub={t("auth.certiliaSub")}
+                busy={provBusy === "certilia"}
+                busyLabel={t("auth.certiliaBusy")}
                 disabled={provBusy !== null}
-                className={providerBtnCls}
-              >
-                {provBusy === "certilia" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <ShieldCheck className="h-4 w-4 text-teal-700" />
-                )}
-                {provBusy === "certilia" ? t("auth.certiliaBusy") : t("auth.certilia")}
-              </button>
-              <p className="-mt-1 text-center text-xs text-inkMuted">
-                {t("auth.certiliaSub")}
-              </p>
-
-              <button
-                type="button"
+                onClick={() => void doCertilia()}
+              />
+              <ProviderTile
+                icon={<GoogleIcon />}
+                label={t("auth.google")}
+                busy={provBusy === "google"}
+                disabled={provBusy !== null}
                 onClick={() => void doOAuth("google")}
+              />
+              <ProviderTile
+                icon={<AppleIcon />}
+                label={t("auth.apple")}
+                busy={provBusy === "apple"}
                 disabled={provBusy !== null}
-                className={providerBtnCls}
-              >
-                {provBusy === "google" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <GoogleIcon />
-                )}
-                {t("auth.google")}
-              </button>
-
-              <button
-                type="button"
                 onClick={() => void doOAuth("apple")}
-                disabled={provBusy !== null}
-                className={providerBtnCls}
-              >
-                {provBusy === "apple" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <AppleIcon />
-                )}
-                {t("auth.apple")}
-              </button>
+              />
             </div>
 
-            <div className="my-5 flex items-center gap-3 text-xs text-inkMuted">
+            <div className="my-8 flex items-center gap-4 text-xs uppercase tracking-[0.14em] text-inkMuted">
               <span className="h-px flex-1 bg-ink/10" />
               {t("auth.or")}
               <span className="h-px flex-1 bg-ink/10" />
             </div>
 
-            <p className="text-sm text-inkMuted">{t("auth.emailIntro")}</p>
-            <form onSubmit={sendCode} className="mt-3 space-y-3">
+            <p className="text-sm leading-relaxed text-inkMuted">
+              {t("auth.emailIntro")}
+            </p>
+            <form onSubmit={sendCode} className="mt-4 space-y-4">
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder={t("auth.emailPlaceholder")}
-                className="w-full rounded-full border border-ink/15 px-4 py-3 text-sm focus:border-ink/30 focus:outline-none"
+                className="w-full rounded-full border border-ink/15 bg-white/80 px-5 py-3.5 text-sm focus:border-ink/30 focus:outline-none"
               />
               <Button type="submit" disabled={busy || provBusy !== null} className="w-full">
                 {busy ? t("auth.sending") : t("auth.sendCode")}
               </Button>
             </form>
-            {error ? <p className="mt-3 text-sm text-rust">{error}</p> : null}
+            {error ? (
+              <p className="mt-4 text-sm leading-relaxed text-rust">{error}</p>
+            ) : null}
           </>
         ) : (
           <>
-            <p className="mt-2 text-sm text-inkMuted">
+            <p className="mt-3 text-sm leading-relaxed text-inkMuted">
               {t("auth.codeIntroPre")}
               <strong>{email}</strong>
               {t("auth.codeIntroPost")}
             </p>
-            <form onSubmit={confirmCode} className="mt-6 space-y-3">
+            <form onSubmit={confirmCode} className="mt-7 space-y-4">
               <input
                 type="text"
                 required
@@ -493,7 +508,7 @@ function SignIn() {
                 {busy ? t("auth.verifying") : t("auth.confirmSignIn")}
               </Button>
             </form>
-            <div className="mt-4 flex items-center justify-between text-xs text-inkMuted">
+            <div className="mt-5 flex items-center justify-between text-xs text-inkMuted">
               <button
                 type="button"
                 onClick={() => {

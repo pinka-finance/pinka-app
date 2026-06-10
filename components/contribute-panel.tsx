@@ -247,7 +247,7 @@ export function ContributePanel({
         <h3 className="mt-3 text-xl font-display font-semibold">
           {t("contribute.thanksTitle")}
         </h3>
-        <p className="mt-1 text-sm text-inkMuted">{t("contribute.thanksDesc")}</p>
+        <p className="mt-2 text-sm leading-relaxed text-inkMuted">{t("contribute.thanksDesc")}</p>
       </div>
     );
   }
@@ -258,7 +258,7 @@ export function ContributePanel({
         <h3 className="text-center text-lg font-display font-semibold">
           {t("contribute.scanTitle")}
         </h3>
-        <p className="mt-1 text-center text-sm text-inkMuted">
+        <p className="mt-2 text-center text-sm leading-relaxed text-inkMuted">
           {t("contribute.amountLabel", { amount: result.amount_eur })}
         </p>
         <div className="mt-5 flex justify-center">
@@ -293,7 +293,7 @@ export function ContributePanel({
       </h3>
 
       {destinationAddress ? (
-        <div className="mt-3 inline-flex rounded-full border border-ink/10 p-0.5 text-sm">
+        <div className="mt-4 inline-flex rounded-full border border-ink/10 p-0.5 text-sm">
           {(["sepa", "onchain"] as const).map((m) => (
             <button
               key={m}
@@ -310,13 +310,13 @@ export function ContributePanel({
         </div>
       ) : null}
 
-      <p className="mt-2 text-sm text-inkMuted">
+      <p className="mt-3 text-sm leading-relaxed text-inkMuted">
         {mode === "sepa"
           ? t("contribute.sepaBlurb")
           : t("contribute.onchainBlurb")}
       </p>
 
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-6 flex flex-wrap gap-2.5">
         {PRESETS.map((c) => {
           const active = amountCents === c && custom === "";
           return (
@@ -347,7 +347,7 @@ export function ContributePanel({
       {mode === "sepa" ? (
       <>
       {verified ? (
-        <div className="mt-4 flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-sm text-teal-800">
+        <div className="mt-5 flex items-center gap-2 rounded-lg border border-teal-200 bg-teal-50 px-3.5 py-2.5 text-sm text-teal-800">
           <ShieldCheck className="h-4 w-4 shrink-0" />
           <span>
             {verifiedName
@@ -356,7 +356,7 @@ export function ContributePanel({
           </span>
         </div>
       ) : (
-        <div className="mt-4 rounded-lg border border-ink/10 bg-sand/40 p-3">
+        <div className="mt-5 rounded-lg border border-ink/10 bg-sand/40 p-4">
           <button
             type="button"
             onClick={doCertilia}
@@ -377,7 +377,7 @@ export function ContributePanel({
         </div>
       )}
 
-      <div className="mt-4 space-y-2">
+      <div className="mt-5 space-y-3">
         <input
           type="text"
           value={displayName}
@@ -423,12 +423,12 @@ export function ContributePanel({
         </label>
       </div>
 
-      {error ? <p className="mt-3 text-sm text-rust">{error}</p> : null}
+      {error ? <p className="mt-4 text-sm leading-relaxed text-rust">{error}</p> : null}
 
       <Button
         onClick={submit}
         disabled={creating}
-        className="mt-5 w-full"
+        className="mt-6 w-full"
       >
         {creating ? (
           <Loader2 className="h-4 w-4 animate-spin" />

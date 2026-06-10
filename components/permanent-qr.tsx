@@ -88,12 +88,12 @@ export function PermanentQr({
       <h3 className="flex items-center gap-2 text-sm font-display font-semibold">
         <QrCode className="h-4 w-4 text-coral" /> {t("permanentQr.title")}
       </h3>
-      <p className="mt-1 text-xs leading-relaxed text-inkMuted">
+      <p className="mt-2 text-xs leading-relaxed text-inkMuted">
         {t("permanentQr.desc")}
       </p>
 
       {/* Amount selector — applies to both rails. Free = blank/overridable. */}
-      <div className="mt-3 flex flex-wrap gap-1.5">
+      <div className="mt-4 flex flex-wrap gap-2">
         <AmtBtn active={amountCents === null && custom === ""} onClick={pickFree}>
           {t("permanentQr.free")}
         </AmtBtn>
@@ -114,7 +114,7 @@ export function PermanentQr({
         <p className="mt-1.5 text-[11px] text-inkMuted">{t("permanentQr.prefillNote")}</p>
       ) : null}
 
-      <div className="mt-3 inline-flex rounded-full border border-ink/10 p-0.5 text-sm">
+      <div className="mt-4 inline-flex rounded-full border border-ink/10 p-0.5 text-sm">
         {(["sepa", "onchain"] as const).map((m) => (
           <button
             key={m}

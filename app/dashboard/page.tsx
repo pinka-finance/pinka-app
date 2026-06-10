@@ -45,11 +45,11 @@ function DashboardInner() {
   }, []);
 
   return (
-    <div className="container-content py-12">
-      <div className="flex items-center justify-between">
+    <div className="container-content py-14">
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-display-md font-display font-semibold">{t("dashboard.title")}</h1>
-          <p className="mt-1 text-sm text-inkMuted">{user?.email}</p>
+          <p className="mt-2 text-sm text-inkMuted">{user?.email}</p>
         </div>
         <div className="flex items-center gap-3">
           <AddPasskeyButton />
@@ -71,22 +71,22 @@ function DashboardInner() {
           {t("dashboard.empty")}
         </div>
       ) : (
-        <div className="mt-10 space-y-3">
+        <div className="mt-12 space-y-4">
           {campaigns.map((c) => (
             <Link
               key={c.id}
               href={`/dashboard/manage?id=${c.id}`}
-              className="card-base flex items-center justify-between !py-4 hover:-translate-y-0.5 hover:shadow-lift"
+              className="card-base flex items-center justify-between !py-5 hover:-translate-y-0.5 hover:shadow-lift"
             >
               <div>
                 <p className="font-medium">{c.title}</p>
-                <p className="text-xs text-inkMuted">
+                <p className="mt-1 text-xs text-inkMuted">
                   /{c.slug} · <StateBadge state={c.state} /> · {c.visibility}
                 </p>
               </div>
               <div className="text-right text-sm">
                 <p className="font-semibold">{fmtEur(c.total_raised_cents)} €</p>
-                <p className="text-xs text-inkMuted">
+                <p className="mt-1 text-xs text-inkMuted">
                   {t("units.supporters", { count: c.contributor_count })}
                 </p>
               </div>

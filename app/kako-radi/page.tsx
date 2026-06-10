@@ -43,12 +43,12 @@ function Section({
   children: ReactNode;
 }) {
   return (
-    <section className="mt-10">
+    <section className="mt-14">
       <h2 className="flex items-center gap-2 text-xl font-display font-semibold">
         <span className="text-coral">{icon}</span>
         {title}
       </h2>
-      <div className="mt-3 space-y-4 text-sm leading-relaxed text-inkSoft">{children}</div>
+      <div className="mt-5 space-y-4 text-sm leading-relaxed text-inkSoft">{children}</div>
     </section>
   );
 }
@@ -58,9 +58,9 @@ export default function HowItWorksPage() {
   const diagrams = getDiagrams(locale);
 
   return (
-    <div className="container-content max-w-3xl py-12">
+    <div className="container-content max-w-3xl py-14">
       <h1 className="text-display-md font-display font-semibold">{t("howItWorks.title")}</h1>
-      <p className="mt-3 text-base leading-relaxed text-inkSoft">
+      <p className="mt-4 text-base leading-relaxed text-inkSoft">
         <Rich>{t("howItWorks.intro")}</Rich>
       </p>
 
@@ -102,14 +102,14 @@ export default function HowItWorksPage() {
         <p>
           <Rich>{t("howItWorks.openSourceBody")}</Rich>
         </p>
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {REPOS.map((r) => (
             <li key={r.url}>
               <a
                 href={r.url}
                 target="_blank"
                 rel="noreferrer"
-                className="group flex items-start gap-2 rounded-lg border border-ink/8 bg-white/40 px-3 py-2.5 transition-colors hover:border-ink/20"
+                className="group flex items-start gap-2.5 rounded-lg border border-ink/8 bg-white/40 px-4 py-3 transition-colors hover:border-ink/20"
               >
                 <Github className="mt-0.5 h-4 w-4 shrink-0 text-inkMuted" />
                 <span>
@@ -141,9 +141,9 @@ export default function HowItWorksPage() {
         </div>
       </Section>
 
-      <div className="mt-12 rounded-lg border border-ink/8 bg-sand/40 p-6 text-center">
+      <div className="mt-16 rounded-lg border border-ink/8 bg-sand/40 p-8 text-center">
         <p className="font-display text-lg font-semibold">{t("howItWorks.ctaTitle")}</p>
-        <Button asChild className="mt-4">
+        <Button asChild className="mt-6">
           <Link href="/dashboard/new">{t("howItWorks.cta")}</Link>
         </Button>
       </div>

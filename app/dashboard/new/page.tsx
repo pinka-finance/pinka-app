@@ -201,12 +201,12 @@ function NewInner() {
   const connected = !!ecosystemSafe && mode !== null;
 
   return (
-    <div className="container-content max-w-4xl py-12">
+    <div className="container-content max-w-4xl py-14">
       <Link href="/dashboard" className="text-sm text-inkMuted hover:text-ink">
         ← {t("common.back")}
       </Link>
-      <h1 className="mt-3 text-display-md font-display font-semibold">{t("dashboardNew.title")}</h1>
-      <p className="mt-2 text-sm text-inkMuted">
+      <h1 className="mt-4 text-display-md font-display font-semibold">{t("dashboardNew.title")}</h1>
+      <p className="mt-3 text-sm leading-relaxed text-inkMuted">
         <Rich>{t("dashboardNew.intro")}</Rich>{" "}
         <Link href="/kako-radi" className="underline underline-offset-2 hover:text-ink">
           {t("dashboardNew.howItWorksLink")}
@@ -214,21 +214,21 @@ function NewInner() {
       </p>
 
       {/* Korak 1 — ecosystem wallet; kampanja dobiva vlastiti račun */}
-      <div className="mt-8 card-base">
+      <div className="mt-10 card-base">
         <h2 className="flex items-center gap-2 font-display font-semibold">
           <ShieldCheck className="h-5 w-5 text-coral" /> {t("dashboardNew.step1Title")}
         </h2>
-        <p className="mt-2 text-sm leading-relaxed text-inkMuted">
+        <p className="mt-3 text-sm leading-relaxed text-inkMuted">
           <Rich>{t("dashboardNew.step1Desc")}</Rich>
         </p>
 
         {!connected ? (
-          <Button onClick={() => connect()} disabled={connecting} className="mt-4">
+          <Button onClick={() => connect()} disabled={connecting} className="mt-6">
             {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
             {connecting ? t("dashboardNew.openingWallet") : t("dashboardNew.connectWallet")}
           </Button>
         ) : (
-          <dl className="mt-4 space-y-2 text-xs">
+          <dl className="mt-6 space-y-3 text-xs">
             <div>
               <dt className="text-inkMuted">{t("dashboardNew.ecosystemWalletLabel")}</dt>
               <dd className="break-all font-mono">{ecosystemSafe}</dd>
@@ -260,9 +260,9 @@ function NewInner() {
       </div>
 
       {/* Korak 2 — detalji */}
-      <div className="mt-6 card-base">
+      <div className="mt-8 card-base">
         <h2 className="font-display font-semibold">{t("dashboardNew.step2Title")}</h2>
-        <div className="mt-2">
+        <div className="mt-4">
           <CampaignForm
             initial={restored}
             submitLabel={t("dashboardNew.createCampaign")}
@@ -312,7 +312,7 @@ function NewInner() {
         </div>
       </div>
 
-      {error ? <p className="mt-4 text-sm text-rust">{error}</p> : null}
+      {error ? <p className="mt-6 text-sm leading-relaxed text-rust">{error}</p> : null}
     </div>
   );
 }

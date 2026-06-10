@@ -25,7 +25,7 @@ export interface CampaignFormValues {
 }
 
 const inputCls =
-  "w-full rounded-lg border border-ink/15 px-3 py-2 text-sm focus:border-ink/30 focus:outline-none";
+  "w-full rounded-lg border border-ink/15 bg-white/80 px-3.5 py-2.5 text-sm focus:border-ink/30 focus:outline-none";
 
 /// Two-column field row: control on the left, description on the right
 /// (stacked on mobile). Right column top-aligns with the label.
@@ -39,7 +39,7 @@ function Field({
   children: ReactNode;
 }) {
   return (
-    <div className="grid grid-cols-1 gap-x-10 gap-y-2 border-b border-ink/8 py-6 first:pt-0 last:border-0 md:grid-cols-[1fr_minmax(0,22rem)]">
+    <div className="grid grid-cols-1 gap-x-10 gap-y-3 border-b border-ink/8 py-7 first:pt-2 last:border-0 md:grid-cols-[1fr_minmax(0,22rem)]">
       <div>
         <label className="mb-2 block text-sm font-medium">{label}</label>
         {children}
@@ -285,7 +285,7 @@ export function CampaignForm({
       </Field>
 
       {/* Napredno — full width ispod stupaca */}
-      <details className="mt-6 rounded-lg border border-ink/10 bg-white/40 px-4 py-3">
+      <details className="mt-8 rounded-lg border border-ink/10 bg-white/40 px-5 py-4">
         <summary className="cursor-pointer text-sm font-medium">
           {t("form.advancedSummary")}{" "}
           {linkedToEpisode ? t("form.advancedLinked") : t("form.advancedOptional")}
@@ -305,9 +305,9 @@ export function CampaignForm({
         </div>
       </details>
 
-      {error ? <p className="mt-5 text-sm text-rust">{error}</p> : null}
+      {error ? <p className="mt-6 text-sm leading-relaxed text-rust">{error}</p> : null}
 
-      <Button type="submit" disabled={busy} className="mt-6">
+      <Button type="submit" disabled={busy} className="mt-8">
         {busy ? t("form.saving") : submitLabel}
       </Button>
     </form>

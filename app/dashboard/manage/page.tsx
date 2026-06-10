@@ -103,13 +103,13 @@ function ManageInner({ id }: { id: string }) {
   }
 
   return (
-    <div className="container-content py-12">
+    <div className="container-content py-14">
       <Link href="/dashboard" className="text-sm text-inkMuted hover:text-ink">← {t("common.myCampaigns")}</Link>
 
-      <div className="mt-3 flex flex-wrap items-center justify-between gap-4">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-display-md font-display font-semibold">{campaign.title}</h1>
-          <p className="mt-1 text-sm text-inkMuted">
+          <p className="mt-2 text-sm text-inkMuted">
             /{campaign.slug} · {t("manage.stateLabel")}{" "}
             <strong>{t(`states.${campaign.state}`)}</strong> ·{" "}
             {fmtEur(campaign.total_raised_cents)} € ·{" "}
@@ -149,7 +149,7 @@ function ManageInner({ id }: { id: string }) {
         </div>
       </div>
 
-      <div className="mt-8 flex gap-1 border-b border-ink/8">
+      <div className="mt-10 flex gap-1 border-b border-ink/8">
         {([
           ["edit", t("manage.tabs.edit")],
           ["tiers", `${t("manage.tabs.tiers")} (${tiers.length})`],
@@ -172,9 +172,9 @@ function ManageInner({ id }: { id: string }) {
         ))}
       </div>
 
-      <div className="mt-8">
+      <div className="mt-10">
         {tab === "edit" ? (
-          <div className="max-w-2xl space-y-6">
+          <div className="max-w-2xl space-y-7">
             <SafeDerivePanel
               campaignId={id}
               destination={campaign.destination_address}
@@ -352,9 +352,9 @@ function TiersTab({
       {tiers.length === 0 ? (
         <p className="text-inkMuted">{t("manage.tiers.empty")}</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {tiers.map((tier) => (
-            <li key={tier.id} className="card-base flex items-center justify-between !py-3">
+            <li key={tier.id} className="card-base flex items-center justify-between !py-4">
               <div>
                 <p className="font-medium">{tier.title} <span className="text-xs text-inkMuted">({tier.kind})</span></p>
                 <p className="text-xs text-inkMuted">
@@ -568,9 +568,9 @@ function PayoutsTab({ rows }: { rows: Payout[] }) {
       {rows.length === 0 ? (
         <p className="text-inkMuted">{t("manage.payouts.empty")}</p>
       ) : (
-        <ul className="space-y-2">
+        <ul className="space-y-3">
           {rows.map((p) => (
-            <li key={p.id} className="card-base flex items-center justify-between !py-3">
+            <li key={p.id} className="card-base flex items-center justify-between !py-4">
               <span>{fmtEur(p.amount_cents)} € → <span className="font-mono text-xs">{p.destination}</span></span>
               <span className="text-xs text-inkMuted">{p.state}</span>
             </li>

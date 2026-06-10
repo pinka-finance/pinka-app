@@ -14,13 +14,13 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="container-content py-14">
+    <div className="container-content py-16">
       <div className="max-w-2xl">
         <span className="eyebrow">{t("home.eyebrow")}</span>
-        <h1 className="mt-4 text-display-md font-display font-semibold">
+        <h1 className="mt-5 text-display-md font-display font-semibold">
           {t("home.title")}
         </h1>
-        <p className="mt-3 text-inkMuted">{t("home.subtitle")}</p>
+        <p className="mt-4 leading-relaxed text-inkMuted">{t("home.subtitle")}</p>
       </div>
 
       {campaigns === null ? (
@@ -30,7 +30,7 @@ export default function HomePage() {
           {t("home.empty")}
         </div>
       ) : (
-        <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3">
           {campaigns.map((c) => (
             <CampaignCard key={c.id} campaign={c} />
           ))}

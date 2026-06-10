@@ -12,7 +12,7 @@ export function SiteHeader() {
   const { t } = useI18n();
   return (
     <header className="border-b border-ink/8">
-      <div className="container-content flex h-16 items-center justify-between">
+      <div className="container-content flex h-20 items-center justify-between">
         <Link href="/" aria-label={t("nav.homeAria")}>
           <Logo />
         </Link>
