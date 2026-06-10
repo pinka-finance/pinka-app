@@ -23,6 +23,21 @@ interface DomovinaSdk {
   /** Forget the cached connection so the next connect() re-picks a wallet. */
   disconnect?(): void;
   send(a: { to: string; amount: string }): Promise<{ txHash: string }>;
+  /**
+   * SDK ≥ 0.10 (see docs/wallet-campaign-account-handoff.md): open a NEW named
+   * account (derived Safe) in the user's wallet — same full-page handoff
+   * semantics as connect(): a fresh call navigates away and never resolves;
+   * on return (dw_return=1&dw_account=…) it resolves from the URL params.
+   */
+  createAccount?(a: {
+    name: string;
+  }): Promise<{
+    accountAddress: string;
+    safeAddress: string;
+    signerAddress: string;
+    credentialId?: string | null;
+    saltNonce?: string | null;
+  }>;
 }
 
 declare global {
@@ -93,6 +108,46 @@ export function preloadWallet(): void {
   if (typeof window === "undefined") return;
   void getSafeContext();
   void loadSdk().catch(() => undefined);
+}
+
+export interface CampaignAccount {
+  /// The campaign's own account (a derived Safe) — donations destination.
+  accountAddress: `0x${string}`;
+  /// User's main ecosystem Safe (bootstrap account).
+  safeAddress: `0x${string}`;
+  signerAddress: `0x${string}`;
+  /// Wallet-side saltNonce of the derived account, when the wallet reports it.
+  saltNonce: string | null;
+}
+
+/// True when the loaded wallet SDK can open a named per-campaign account in the
+/// user's wallet (SDK ≥ 0.10). Inside Safe{Wallet} (Safe App) this is always
+/// false — there the host Safe owns derived campaign Safes (legacy path).
+export async function supportsCampaignAccounts(): Promise<boolean> {
+  if (typeof window === "undefined") return false;
+  if (await getSafeContext()) return false;
+  await loadSdk().catch(() => undefined);
+  return typeof window.Domovina?.createAccount === "function";
+}
+
+/// Open a NEW account named after the campaign in the user's DOMOVINA wallet.
+/// The account is a wallet-native derived Safe (1-of-2 with the wallet's
+/// recovery owner) that shows up in the wallet's account list immediately —
+/// the campaign behaves like a separate bank account there. Same handoff
+/// semantics as connectWallet(): a fresh call NAVIGATES AWAY and the promise
+/// never resolves; the caller must persist its state and re-call this on
+/// return (dw_return=1) to resolve from the URL params.
+export async function createCampaignAccount(name: string): Promise<CampaignAccount> {
+  await loadSdk();
+  const sdk = window.Domovina;
+  if (!sdk?.createAccount) throw new Error("wallet_sdk_no_create_account");
+  const r = await sdk.createAccount({ name });
+  return {
+    accountAddress: r.accountAddress as `0x${string}`,
+    safeAddress: r.safeAddress as `0x${string}`,
+    signerAddress: r.signerAddress as `0x${string}`,
+    saltNonce: r.saltNonce ?? null,
+  };
 }
 
 /// Send EURe to `to`. Inside Safe{Wallet} the transfer is proposed to the host
