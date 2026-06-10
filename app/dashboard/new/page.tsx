@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Wallet, ShieldCheck, Loader2 } from "lucide-react";
-import { AuthGate } from "@/lib/auth";
+import { AuthGate, VerifiedGate } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { CampaignForm, type CampaignFormValues } from "@/components/dashboard/campaign-form";
 import { createCampaign, getMyAccountId } from "@/lib/dashboard";
@@ -53,7 +53,11 @@ function clearDraft(): void {
 export default function NewCampaignPage() {
   return (
     <AuthGate>
-      <NewInner />
+      {/* Kreiranje kampanje SAMO uz Certilia Mobile ID (KYC/AML) — uz UI gate
+          isto enforca i RLS na campaigns INSERT (is_identity_verified()). */}
+      <VerifiedGate>
+        <NewInner />
+      </VerifiedGate>
     </AuthGate>
   );
 }
