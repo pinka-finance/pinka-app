@@ -20,6 +20,9 @@ export function SiteHeader() {
           <Link href="/" className="hover:text-ink">
             {t("nav.campaigns")}
           </Link>
+          <Link href="/kako-radi" className="hover:text-ink">
+            {t("nav.howItWorks")}
+          </Link>
           <Link href="/dashboard" className="hover:text-ink">
             {t("nav.creators")}
           </Link>

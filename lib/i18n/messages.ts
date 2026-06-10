@@ -14,6 +14,7 @@ const hr = {
   nav: {
     campaigns: "Kampanje",
     creators: "Za kreatore",
+    howItWorks: "Kako radi",
     about: "O projektu",
     homeAria: "pinka — naslovnica",
   },
@@ -426,6 +427,36 @@ const hr = {
       empty: "Nema zabilježenih isplata.",
     },
   },
+  howItWorks: {
+    seoTitle: "pinka — kako radi",
+    title: "Kako pinka radi",
+    intro:
+      "Svaka kampanja na pinki ima **vlastiti račun** — kao zaseban bankovni račun, samo što živi na lancu. Bez kartičnih provizija, bez posrednika koji drži novac: donacije idu izravno tebi, a svatko ih može provjeriti. Evo cijele slike, korak po korak.",
+    identityTitle: "Jedan identitet, više računa",
+    identityBody:
+      "Tvoj **DOMOVINA wallet** radi kao moderna bankovna aplikacija: jedna prijava (passkey — Face ID ili otisak prsta, bez lozinki) i pod njom više računa. Glavni račun za svakodnevicu, plus **po jedan račun za svaku kampanju**. Tehnički, svaki račun je **Safe multisig** novčanik na Gnosis lancu — industrijski standard za čuvanje sredstava on-chain — a upravljaš njime isključivo ti, svojim passkeyem.",
+    identityDiagramTitle: "Identitet i računi",
+    donateTitle: "Kako donacija stiže",
+    donateBody:
+      "Podržavatelj plaća na dva načina: **SEPA uplatom** iz svoje bankovne aplikacije (skenira QR kod — bez kartica, bez provizija) ili **on-chain** izravno iz svog novčanika. U oba slučaja novac na račun kampanje sjeda kao **EURe** — digitalni euro reguliranog izdavatelja (Monerium), 1:1 vezan uz euro. Pinka nikad ne drži novac: on putuje od podržavatelja izravno na račun tvoje kampanje.",
+    donateDiagramTitle: "Tok donacije",
+    payoutTitle: "Isplata na tvoj IBAN",
+    payoutBody:
+      "Kad želiš isplatu, EURe s računa kampanje pretvaraš natrag u eure na svom bankovnom računu (Monerium otkup u SEPA). Svaku isplatu odobravaš svojim passkeyem — nitko je drugi ne može pokrenuti.",
+    payoutDiagramTitle: "Tok isplate",
+    transparencyTitle: "Zašto je ovo transparentno i sigurno",
+    bullet1:
+      "**Samo ti upravljaš računom.** Račun kampanje je Safe multisig čiji je vlasnik tvoj passkey. Ni pinka ni itko treći ne može pomaknuti sredstva.",
+    bullet2:
+      "**Sve je javno provjerljivo.** Stanje i svaki priljev računa kampanje vidljivi su na Gnosis lancu (Gnosisscan) — neovisno o nama. Donatori ne moraju vjerovati, mogu provjeriti.",
+    bullet3:
+      "**Bez naknada unaprijed.** Adresa računa prima novac od prvog dana, a na lancu se račun stvara tek pri prvoj isplati — pa nema troška dok kampanja ne proradi.",
+    bullet4:
+      "**Pratiš sve u walletu.** Svaka kampanja ti se u DOMOVINA walletu vodi kao zaseban račun, sa stanjem i prometom u stvarnom vremenu — kao u bankovnoj aplikaciji.",
+    ctaTitle: "Spreman pokrenuti kampanju?",
+    cta: "Kreiraj kampanju",
+    diagramLoading: "Učitavam dijagram…",
+  },
   notFound: {
     code: "404",
   },
@@ -437,6 +468,7 @@ const en: Messages = {
   nav: {
     campaigns: "Campaigns",
     creators: "For creators",
+    howItWorks: "How it works",
     about: "About",
     homeAria: "pinka — home",
   },
@@ -840,6 +872,36 @@ const en: Messages = {
         "EURe arrives directly to the campaign's destination Safe. The payout (Monerium redeem to SEPA) is triggered via the Safe / ops process — here is the history.",
       empty: "No payouts recorded yet.",
     },
+  },
+  howItWorks: {
+    seoTitle: "pinka — how it works",
+    title: "How pinka works",
+    intro:
+      "Every campaign on pinka has **its own account** — like a separate bank account, except it lives on-chain. No card fees, no middleman holding the money: donations go directly to you, and anyone can verify them. Here's the whole picture, step by step.",
+    identityTitle: "One identity, many accounts",
+    identityBody:
+      "Your **DOMOVINA wallet** works like a modern banking app: one sign-in (a passkey — Face ID or fingerprint, no passwords) with multiple accounts under it. A main account for everyday use, plus **one account per campaign**. Technically, each account is a **Safe multisig** wallet on Gnosis chain — the industry standard for holding funds on-chain — and only you control it, with your passkey.",
+    identityDiagramTitle: "Identity and accounts",
+    donateTitle: "How a donation arrives",
+    donateBody:
+      "A supporter pays in one of two ways: a **SEPA payment** from their banking app (scanning a QR code — no cards, no fees) or **on-chain** directly from their wallet. Either way, the money lands on the campaign account as **EURe** — a digital euro from a regulated issuer (Monerium), pegged 1:1 to the euro. Pinka never holds the money: it travels from the supporter straight to your campaign's account.",
+    donateDiagramTitle: "Donation flow",
+    payoutTitle: "Payout to your IBAN",
+    payoutBody:
+      "When you want a payout, you convert EURe from the campaign account back to euros on your bank account (Monerium redeem to SEPA). You approve every payout with your passkey — nobody else can trigger one.",
+    payoutDiagramTitle: "Payout flow",
+    transparencyTitle: "Why this is transparent and safe",
+    bullet1:
+      "**Only you control the account.** The campaign account is a Safe multisig owned by your passkey. Neither pinka nor any third party can move the funds.",
+    bullet2:
+      "**Everything is publicly verifiable.** The campaign account's balance and every inflow are visible on Gnosis chain (Gnosisscan) — independently of us. Donors don't have to trust, they can verify.",
+    bullet3:
+      "**No upfront fees.** The account address receives money from day one, while the account itself is created on-chain only at the first payout — so there's no cost until the campaign takes off.",
+    bullet4:
+      "**You track everything in the wallet.** Each campaign shows up in your DOMOVINA wallet as a separate account, with its balance and activity in real time — like in a banking app.",
+    ctaTitle: "Ready to start a campaign?",
+    cta: "Create a campaign",
+    diagramLoading: "Loading diagram…",
   },
   notFound: {
     code: "404",

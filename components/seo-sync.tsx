@@ -41,7 +41,9 @@ function upsertLink(rel: string, href: string, hreflang?: string) {
 export function SeoSync() {
   const { locale, t } = useI18n();
   const pathname = usePathname();
-  const title = t("seo.title");
+  // Per-route titles for static content pages; the campaign route (/c) sets
+  // its own (the campaign name) and is skipped below.
+  const title = pathname === "/kako-radi" ? t("howItWorks.seoTitle") : t("seo.title");
   const description = t("seo.description");
   const ogImageAlt = t("seo.ogImageAlt");
   const ogLocale = locale === "en" ? "en_US" : "hr_HR";
