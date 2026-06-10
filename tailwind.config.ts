@@ -4,7 +4,13 @@ import type { Config } from "tailwindcss";
 // the app and the marketing site stay visually identical. Keep in sync.
 const config: Config = {
   darkMode: ["class"],
-  content: ["./app/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}"],
+  // lib/ contains JSX too (auth.tsx SignIn/VerifiedGate) — without it here its
+  // classes get purged and e.g. the login card renders full-width (no max-w-md).
+  content: [
+    "./app/**/*.{ts,tsx}",
+    "./components/**/*.{ts,tsx}",
+    "./lib/**/*.{ts,tsx}",
+  ],
   theme: {
     container: {
       center: true,
