@@ -204,10 +204,10 @@ const hr = {
   dashboardNew: {
     title: "Nova kampanja",
     intro:
-      "Dva koraka: prvo poveži **DOMOVINA wallet** (novčanik kampanje), zatim detalji. Kampanja se kreira kao **nacrt** i ne prima uplate dok je ne aktiviraš.",
+      "Dva koraka: prvo poveži **DOMOVINA wallet**, zatim detalji. Svaka kampanja dobiva **vlastiti račun** — kao zaseban bankovni račun, samo na lancu. Kampanja se kreira kao **nacrt** i ne prima uplate dok je ne aktiviraš.",
     step1Title: "1. Novčanik kampanje",
     step1Desc:
-      "Poveži svoj **DOMOVINA wallet** — isti passkey-identitet koji koristiš na domovina.ai i drugim aplikacijama ekosustava. Iz njega izvodimo **vlastiti Safe za ovu kampanju** (donacije stižu odvojeno po kampanji), a kontrolu nad svime imaš ti, jednim passkeyem.",
+      "Poveži svoj **DOMOVINA wallet** — isti passkey-identitet koji koristiš na domovina.ai i drugim aplikacijama ekosustava. Svaka kampanja dobiva **vlastiti račun** (Safe multisig na Gnosis lancu): donacije stižu odvojeno po kampanji, a stanje i promet pratiš u walletu kao na bankovnom računu. Kontrolu nad svime imaš ti, jednim passkeyem.",
     openingWallet: "Otvaram wallet…",
     connectWallet: "Poveži DOMOVINA wallet",
     changeWallet: "Promijeni novčanik",
@@ -215,6 +215,12 @@ const hr = {
     campaignSafeLabel: "Safe ove kampanje — ovamo stižu donacije",
     counterfactualNote:
       "**Counterfactual**: adresa već prima EURe; sam Safe se na lancu kreira tek pri prvoj isplati (bez gasa unaprijed). Vlasnik: tvoj ekosustav-passkey.",
+    walletAccountNote:
+      "Pri kreiranju kampanje wallet otvara **novi račun s imenom kampanje** — odmah ga vidiš u DOMOVINA walletu uz svoj glavni račun, sa stanjem i prometom u stvarnom vremenu.",
+    finishing: "Otvaram račun kampanje i dovršavam kreiranje…",
+    accountFailed:
+      "Otvaranje računa kampanje u walletu nije uspjelo (otkazano ili blokirano). Uneseni podaci su sačuvani — pokušaj ponovno.",
+    howItWorksLink: "Kako sve radi? →",
     step2Title: "2. Detalji kampanje",
     createCampaign: "Kreiraj kampanju",
     connectFailed:
@@ -269,12 +275,16 @@ const hr = {
     visLabel: "Vidljivost",
     visDesc:
       "Tko može vidjeti kampanju. Bez brige — kreira se kao **nacrt** i ne prima uplate dok je ručno ne aktiviraš.",
-    safeLabel: "Safe kampanje (Gnosis)",
+    safeLabel: "Račun kampanje (Safe na Gnosisu)",
     safeDescLocked:
-      "Multisig novčanik u koji stižu sve donacije kao EURe (euro-stablecoin). Izveden je iz tvog passkeya — **samo ti njime upravljaš**. „Counterfactual” znači da adresa već prima novac, a sam novčanik se na lancu kreira tek pri prvoj isplati — pa ne plaćaš gas unaprijed.",
+      "**Zaseban račun ove kampanje** — multisig novčanik u koji stižu sve donacije kao EURe (euro-stablecoin). Izveden je iz tvog passkeya — **samo ti njime upravljaš**. „Counterfactual” znači da adresa već prima novac, a sam novčanik se na lancu kreira tek pri prvoj isplati — pa ne plaćaš gas unaprijed.",
+    safeDescAccount:
+      "**Zaseban račun ove kampanje.** Pri kreiranju se u tvom DOMOVINA walletu otvara novi račun (Safe multisig na Gnosis lancu) s imenom kampanje. Sve donacije stižu na njega kao EURe (euro-stablecoin), a stanje i promet pratiš u walletu — kao zaseban bankovni račun. Upravljaš njime samo ti, svojim passkeyem.",
+    safePendingAccount:
+      "Račun se otvara u tvom DOMOVINA walletu pri kreiranju kampanje.",
     safeDescManual:
       "EURe se prosljeđuje izravno na ovu adresu. Preporuka: Safe kojim sam upravljaš.",
-    safeLockedEmpty: "Poveži passkey u koraku 1 — Safe se izvodi automatski.",
+    safeLockedEmpty: "Poveži DOMOVINA wallet u koraku 1.",
     advancedSummary: "Napredno — povezivanje sa sadržajem",
     advancedLinked: "· vezano uz epizodu",
     advancedOptional: "(opcionalno)",
@@ -609,10 +619,10 @@ const en: Messages = {
   dashboardNew: {
     title: "New campaign",
     intro:
-      "Two steps: first connect your **DOMOVINA wallet** (the campaign wallet), then the details. The campaign is created as a **draft** and won't accept payments until you activate it.",
+      "Two steps: first connect your **DOMOVINA wallet**, then the details. Every campaign gets **its own account** — like a separate bank account, just on-chain. The campaign is created as a **draft** and won't accept payments until you activate it.",
     step1Title: "1. Campaign wallet",
     step1Desc:
-      "Connect your **DOMOVINA wallet** — the same passkey identity you use on domovina.ai and other ecosystem apps. From it we derive a **dedicated Safe for this campaign** (donations arrive separately per campaign), while you keep full control with a single passkey.",
+      "Connect your **DOMOVINA wallet** — the same passkey identity you use on domovina.ai and other ecosystem apps. Every campaign gets **its own account** (a Safe multisig on Gnosis chain): donations arrive separately per campaign, and you track the balance and activity in the wallet like a bank account. You keep full control with a single passkey.",
     openingWallet: "Opening wallet…",
     connectWallet: "Connect DOMOVINA wallet",
     changeWallet: "Change wallet",
@@ -620,6 +630,12 @@ const en: Messages = {
     campaignSafeLabel: "This campaign's Safe — donations arrive here",
     counterfactualNote:
       "**Counterfactual**: the address already receives EURe; the Safe itself is created on-chain only at the first payout (no gas upfront). Owner: your ecosystem passkey.",
+    walletAccountNote:
+      "When you create the campaign, the wallet opens a **new account named after it** — you'll see it in your DOMOVINA wallet next to your main account, with the balance and activity in real time.",
+    finishing: "Opening the campaign account and finishing creation…",
+    accountFailed:
+      "Opening the campaign account in the wallet failed (cancelled or blocked). Your input is preserved — try again.",
+    howItWorksLink: "How does it all work? →",
     step2Title: "2. Campaign details",
     createCampaign: "Create campaign",
     connectFailed:
@@ -674,12 +690,16 @@ const en: Messages = {
     visLabel: "Visibility",
     visDesc:
       "Who can see the campaign. No worries — it's created as a **draft** and won't accept payments until you activate it manually.",
-    safeLabel: "Campaign Safe (Gnosis)",
+    safeLabel: "Campaign account (Safe on Gnosis)",
     safeDescLocked:
-      "A multisig wallet where all donations arrive as EURe (a euro stablecoin). It's derived from your passkey — **only you control it**. “Counterfactual” means the address already receives money, while the wallet itself is created on-chain only at the first payout — so you don't pay gas upfront.",
+      "**This campaign's own account** — a multisig wallet where all donations arrive as EURe (a euro stablecoin). It's derived from your passkey — **only you control it**. “Counterfactual” means the address already receives money, while the wallet itself is created on-chain only at the first payout — so you don't pay gas upfront.",
+    safeDescAccount:
+      "**This campaign's own account.** When you create the campaign, a new account (a Safe multisig on Gnosis chain) named after it is opened in your DOMOVINA wallet. All donations arrive on it as EURe (a euro stablecoin), and you track the balance and activity in the wallet — like a separate bank account. Only you control it, with your passkey.",
+    safePendingAccount:
+      "The account is opened in your DOMOVINA wallet when you create the campaign.",
     safeDescManual:
       "EURe is forwarded directly to this address. Recommended: a Safe you control yourself.",
-    safeLockedEmpty: "Connect a passkey in step 1 — the Safe is derived automatically.",
+    safeLockedEmpty: "Connect your DOMOVINA wallet in step 1.",
     advancedSummary: "Advanced — link to content",
     advancedLinked: "· linked to an episode",
     advancedOptional: "(optional)",

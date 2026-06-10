@@ -71,12 +71,18 @@ export function CampaignForm({
   submitLabel,
   onSubmit,
   lockedDestination,
+  pendingDestinationNote,
   lockedTitle,
 }: {
   initial?: Partial<CampaignFormValues>;
   submitLabel: string;
   onSubmit: (v: CampaignFormValues) => Promise<void>;
   lockedDestination?: string | null;
+  // When set (and there's no lockedDestination yet), the destination account is
+  // opened in the user's wallet during creation: the note is shown in place of
+  // the address and submit proceeds with an empty destinationAddress — the
+  // caller fills it in from the wallet's return params.
+  pendingDestinationNote?: string;
   // When set, the title is captured elsewhere (step 1) — the field is hidden.
   lockedTitle?: string;
 }) {
@@ -105,9 +111,10 @@ export function CampaignForm({
     const effectiveTitle = (lockedTitle ?? title).trim();
     if (!effectiveTitle) return setError(t("form.errTitleRequired"));
     const dest = (lockedDestination ?? destination).trim();
-    if (!ADDR_RE.test(dest)) {
+    const destinationPending = !!pendingDestinationNote && !lockedDestination;
+    if (!destinationPending && !ADDR_RE.test(dest)) {
       return setError(
-        lockedDestination
+        lockedDestination !== undefined
           ? t("form.errSafeNotDerived")
           : t("form.errAddrRequired"),
       );
@@ -252,7 +259,11 @@ export function CampaignForm({
         label={t("form.safeLabel")}
         desc={
           lockedDestination !== undefined ? (
-            <Rich>{t("form.safeDescLocked")}</Rich>
+            <Rich>
+              {pendingDestinationNote && !lockedDestination
+                ? t("form.safeDescAccount")
+                : t("form.safeDescLocked")}
+            </Rich>
           ) : (
             <Rich>{t("form.safeDescManual")}</Rich>
           )
@@ -265,7 +276,7 @@ export function CampaignForm({
             </p>
           ) : (
             <p className="rounded-lg border border-dashed border-ink/15 px-3 py-2 text-xs text-inkMuted">
-              {t("form.safeLockedEmpty")}
+              {pendingDestinationNote ?? t("form.safeLockedEmpty")}
             </p>
           )
         ) : (
