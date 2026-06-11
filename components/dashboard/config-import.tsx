@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { fmtEur } from "@/lib/format";
 import {
   buildAiPrompt,
+  buildAiPromptFromConfig,
   exportCampaignConfig,
   parseCampaignConfig,
   type ImportResult,
@@ -31,11 +32,20 @@ export function ConfigImport({
   const [parseError, setParseError] = useState<string | null>(null);
   const [fetching, setFetching] = useState(false);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
-  const [copied, setCopied] = useState<"prompt" | "config" | null>(null);
+  const [copied, setCopied] = useState<"prompt" | "config" | "seed" | null>(null);
+  // sirovi config zadnjeg USPJEŠNOG link importa — za "semantičku doradu" u AI-ju
+  const [linkSeed, setLinkSeed] = useState<{
+    config: Record<string, unknown>;
+    kind: "episode" | "channel";
+  } | null>(null);
 
-  async function copy(kind: "prompt" | "config") {
+  async function copy(kind: "prompt" | "config" | "seed") {
     const payload =
-      kind === "prompt" ? buildAiPrompt(locale, current) : exportCampaignConfig(current!);
+      kind === "prompt"
+        ? buildAiPrompt(locale, current)
+        : kind === "config"
+          ? exportCampaignConfig(current!)
+          : buildAiPromptFromConfig(locale, linkSeed!.config, linkSeed!.kind);
     try {
       await navigator.clipboard.writeText(payload);
       setCopied(kind);
@@ -52,10 +62,13 @@ export function ConfigImport({
     setExcluded(new Set());
     const ref = parseDomovinaUrl(text);
     let source = text;
+    setLinkSeed(null);
     if (ref) {
       setFetching(true);
       try {
-        source = JSON.stringify(await fetchDomovinaConfig(ref));
+        const config = await fetchDomovinaConfig(ref);
+        source = JSON.stringify(config);
+        setLinkSeed({ config, kind: ref.kind });
       } catch (e) {
         console.error(e);
         setResult(null);
@@ -232,6 +245,26 @@ export function ConfigImport({
             <p className="mt-2 text-xs text-inkMuted">
               {t("dashboardNew.ai.ignoredKeys", { keys: result.ignoredKeys.join(", ") })}
             </p>
+          ) : null}
+
+          {linkSeed ? (
+            <div className="mt-3 rounded-lg bg-coral/5 px-3 py-2.5">
+              <p className="text-xs leading-relaxed text-inkSoft">
+                {t("dashboardNew.ai.seedHint")}
+              </p>
+              <button
+                type="button"
+                onClick={() => copy("seed")}
+                className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-coral/30 bg-white/70 px-3 py-1.5 text-xs font-medium hover:border-coral/60"
+              >
+                {copied === "seed" ? (
+                  <Check className="h-3.5 w-3.5 text-teal-700" />
+                ) : (
+                  <Sparkles className="h-3.5 w-3.5 text-coral" />
+                )}
+                {copied === "seed" ? t("dashboardNew.ai.copied") : t("dashboardNew.ai.copySeedPrompt")}
+              </button>
+            </div>
           ) : null}
 
           <div className="mt-4 flex gap-2">

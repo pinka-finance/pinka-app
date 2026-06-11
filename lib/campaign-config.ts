@@ -318,3 +318,18 @@ export function buildAiPrompt(locale: string, current?: CampaignFormValues | nul
     : locale === "en" ? "(describe it in your own words here)" : "(ovdje opiši svojim riječima)";
   return base + seed + "\n";
 }
+
+/// Predložak seedan SIROVIM podacima s domovina.ai (statički link import) —
+/// asistent ih semantički preoblikuje u kampanju umjesto da prepričava metapodatke.
+export function buildAiPromptFromConfig(
+  locale: string,
+  config: Record<string, unknown>,
+  kind: "episode" | "channel",
+): string {
+  const base = locale === "en" ? PROMPT_EN : PROMPT_HR;
+  const note =
+    locale === "en"
+      ? `These are RAW ${kind === "episode" ? "episode" : "channel"} data auto-imported from domovina.ai — don't just rephrase the metadata: rewrite the title and description as the campaign ORGANIZER would (first person, why support matters, where the money goes), keep subject_type/subject_ref and cover_image_url exactly as they are:`
+      : `Ovo su SIROVI podaci ${kind === "episode" ? "epizode" : "kanala"} automatski uvezeni s domovina.ai — nemoj samo prepričati metapodatke: preoblikuj naslov i opis kako bi ih napisao ORGANIZATOR kampanje (prvo lice, zašto podrška ima smisla, kamo ide novac), a subject_type/subject_ref i cover_image_url ostavi točno kakvi jesu:`;
+  return base + note + "\n```json\n" + JSON.stringify(config, null, 2) + "\n```\n";
+}

@@ -265,6 +265,9 @@ const hr = {
       linkLoading: "Dohvaćam s domovina.ai…",
       linkFetchFailed:
         "Dohvat podataka s domovina.ai nije uspio — provjeri link (epizoda možda još nije obrađena).",
+      seedHint:
+        "Ovo je statički uvoz (metapodaci 1:1). Za semantičku doradu — naslov i opis napisan kao da ga piše organizator — kopiraj predložak s ovim podacima, iteriraj u Claudeu (ili Geminiju/ChatGPT-u) i zalijepi rezultat natrag ovdje.",
+      copySeedPrompt: "Kopiraj AI predložak s ovim podacima",
       versionWarn:
         "Konfiguracija nije označena kao pinka.campaign.v1 — polja svejedno možeš pregledati i primijeniti.",
       reviewTitle: "Pregled uvezenih polja",
@@ -860,6 +863,9 @@ const en: Messages = {
       linkLoading: "Fetching from domovina.ai…",
       linkFetchFailed:
         "Fetching data from domovina.ai failed — check the link (the episode may not be processed yet).",
+      seedHint:
+        "This is a static import (metadata 1:1). For a semantic rewrite — a title and description written as the organizer would — copy the template with this data, iterate in Claude (or Gemini/ChatGPT) and paste the result back here.",
+      copySeedPrompt: "Copy the AI template with this data",
       versionWarn:
         "The configuration isn't marked as pinka.campaign.v1 — you can still review and apply the fields.",
       reviewTitle: "Review imported fields",
