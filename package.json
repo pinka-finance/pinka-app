@@ -9,7 +9,9 @@
     "postbuild": "node scripts/gen-version.mjs",
     "start": "next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:config": "node scripts/test-campaign-config.mjs",
+    "test:config:live": "node scripts/test-campaign-config.mjs --live"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",

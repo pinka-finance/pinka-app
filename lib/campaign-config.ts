@@ -91,7 +91,7 @@ export function parseCampaignConfig(text: string): ImportResult | null {
   const known = new Set([
     "version", "title", "type", "description", "goal_eur", "min_contribution_eur",
     "visibility", "recurrence", "recurrence_anchor_day", "location",
-    "starts_at", "ends_at", "subject_type", "subject_ref",
+    "starts_at", "ends_at", "subject_type", "subject_ref", "cover_image_url",
   ]);
   for (const k of Object.keys(json)) if (!known.has(k)) ignoredKeys.push(k);
 
@@ -211,6 +211,14 @@ export function parseCampaignConfig(text: string): ImportResult | null {
         : field("subject_type", "form.subjectTypeLabel", show(json.subject_type), null, "form.errSubjectType"),
     );
   }
+  if ("cover_image_url" in json && json.cover_image_url !== null) {
+    const v = str(json.cover_image_url)?.trim() ?? "";
+    fields.push(
+      /^https:\/\//i.test(v) && v.length <= 1000
+        ? field("cover_image_url", "form.cover.label", show(v), { coverImageUrl: v })
+        : field("cover_image_url", "form.cover.label", show(json.cover_image_url), null, "form.errImportUrl"),
+    );
+  }
   if ("subject_ref" in json && json.subject_ref !== null) {
     const v = str(json.subject_ref)?.trim() ?? "";
     fields.push(
@@ -244,6 +252,7 @@ export function exportCampaignConfig(v: CampaignFormValues): string {
       ...(v.latitude !== null ? { latitude: v.latitude, longitude: v.longitude } : {}),
     };
   }
+  if (v.coverImageUrl) config.cover_image_url = v.coverImageUrl;
   if (v.startsAt) config.starts_at = v.startsAt;
   if (v.endsAt) config.ends_at = v.endsAt;
   if (v.subjectType && v.subjectType !== "generic") config.subject_type = v.subjectType;

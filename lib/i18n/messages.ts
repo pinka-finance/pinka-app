@@ -251,16 +251,20 @@ const hr = {
     connectFailed:
       "Povezivanje s DOMOVINA walletom nije uspjelo (otkazano ili blokirano).",
     ai: {
-      title: "Ispuni uz AI asistenta",
-      desc: "Kampanju možeš osmisliti u **ChatGPT-u, Claudeu ili Geminiju**: kopiraj predložak, iteriraj s asistentom dok konfiguracija ne bude po tvom, pa završni JSON zalijepi ovdje. Prije primjene svako polje pregledavaš i potvrđuješ zasebno — ništa se ne upisuje slijepo.",
+      title: "Ispuni uz AI asistenta ili domovina.ai link",
+      desc: "Kampanju možeš osmisliti u AI asistentu — **preporučujemo Claude**, a odlično rade i **Gemini** te **ChatGPT**: kopiraj predložak, iteriraj dok konfiguracija ne bude po tvom, pa završni JSON zalijepi ovdje. Još brže: zalijepi **link na domovina.ai epizodu ili kanal** (npr. domovina.ai/v/… ili domovina.ai/c/…) i kampanja se predkonfigurira sama. Prije primjene svako polje pregledavaš i potvrđuješ zasebno — ništa se ne upisuje slijepo.",
       copyPrompt: "Kopiraj predložak za AI",
       copied: "Kopirano ✓",
       exportJson: "Izvezi trenutačnu konfiguraciju",
-      pasteLabel: "Zalijepi konfiguraciju (JSON iz AI chata)",
-      pastePlaceholder: '{ "version": "pinka.campaign.v1", … }',
+      pasteLabel: "Zalijepi JSON iz AI chata ili domovina.ai link",
+      pastePlaceholder:
+        'https://domovina.ai/v/… · https://domovina.ai/c/… · { "version": "pinka.campaign.v1", … }',
       parse: "Pregledaj polja",
       parseError:
-        "Ne mogu pročitati konfiguraciju — zalijepi cijeli JSON code block iz AI chata.",
+        "Ne mogu pročitati konfiguraciju — zalijepi cijeli JSON code block iz AI chata ili domovina.ai link.",
+      linkLoading: "Dohvaćam s domovina.ai…",
+      linkFetchFailed:
+        "Dohvat podataka s domovina.ai nije uspio — provjeri link (epizoda možda još nije obrađena).",
       versionWarn:
         "Konfiguracija nije označena kao pinka.campaign.v1 — polja svejedno možeš pregledati i primijeniti.",
       reviewTitle: "Pregled uvezenih polja",
@@ -317,6 +321,7 @@ const hr = {
     errFixFields: "Ispravi označena polja ({count}).",
     errImportEnum: "Vrijednost nije među dopuštenima.",
     errImportDate: "Neispravan datum — očekujem YYYY-MM-DD.",
+    errImportUrl: "Neispravan URL — očekujem https:// (najviše 1000 znakova).",
     sections: {
       basics: "Osnovno",
       finance: "Cilj i uplate",
@@ -841,15 +846,20 @@ const en: Messages = {
     connectFailed:
       "Connecting to the DOMOVINA wallet failed (cancelled or blocked).",
     ai: {
-      title: "Fill it in with an AI assistant",
-      desc: "You can shape the campaign in **ChatGPT, Claude or Gemini**: copy the template, iterate with the assistant until the configuration feels right, then paste the final JSON back here. Before applying you review and confirm every field individually — nothing is written blindly.",
+      title: "Fill it in with an AI assistant or a domovina.ai link",
+      desc: "You can shape the campaign in an AI assistant — **we recommend Claude**, and **Gemini** and **ChatGPT** work great too: copy the template, iterate until the configuration feels right, then paste the final JSON back here. Even faster: paste a **link to a domovina.ai episode or channel** (e.g. domovina.ai/v/… or domovina.ai/c/…) and the campaign preconfigures itself. Before applying you review and confirm every field individually — nothing is written blindly.",
       copyPrompt: "Copy the AI template",
       copied: "Copied ✓",
       exportJson: "Export the current configuration",
-      pasteLabel: "Paste the configuration (JSON from the AI chat)",
-      pastePlaceholder: '{ "version": "pinka.campaign.v1", … }',
+      pasteLabel: "Paste JSON from the AI chat or a domovina.ai link",
+      pastePlaceholder:
+        'https://domovina.ai/v/… · https://domovina.ai/c/… · { "version": "pinka.campaign.v1", … }',
       parse: "Review fields",
-      parseError: "Couldn't read the configuration — paste the whole JSON code block from the AI chat.",
+      parseError:
+        "Couldn't read the configuration — paste the whole JSON code block from the AI chat or a domovina.ai link.",
+      linkLoading: "Fetching from domovina.ai…",
+      linkFetchFailed:
+        "Fetching data from domovina.ai failed — check the link (the episode may not be processed yet).",
       versionWarn:
         "The configuration isn't marked as pinka.campaign.v1 — you can still review and apply the fields.",
       reviewTitle: "Review imported fields",
@@ -906,6 +916,7 @@ const en: Messages = {
     errFixFields: "Fix the highlighted fields ({count}).",
     errImportEnum: "The value isn't one of the allowed options.",
     errImportDate: "Invalid date — expected YYYY-MM-DD.",
+    errImportUrl: "Invalid URL — expected https:// (at most 1000 characters).",
     sections: {
       basics: "Basics",
       finance: "Goal & payments",

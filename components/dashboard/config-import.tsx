@@ -10,6 +10,7 @@ import {
   parseCampaignConfig,
   type ImportResult,
 } from "@/lib/campaign-config";
+import { parseDomovinaUrl, fetchDomovinaConfig } from "@/lib/domovina-import";
 import type { CampaignFormValues } from "@/components/dashboard/campaign-form";
 import { useI18n, Rich } from "@/lib/i18n";
 
@@ -27,7 +28,8 @@ export function ConfigImport({
   const { t, locale } = useI18n();
   const [text, setText] = useState("");
   const [result, setResult] = useState<ImportResult | null>(null);
-  const [parseFailed, setParseFailed] = useState(false);
+  const [parseError, setParseError] = useState<string | null>(null);
+  const [fetching, setFetching] = useState(false);
   const [excluded, setExcluded] = useState<Set<string>>(new Set());
   const [copied, setCopied] = useState<"prompt" | "config" | null>(null);
 
@@ -43,11 +45,33 @@ export function ConfigImport({
     }
   }
 
-  function parse() {
-    const r = parseCampaignConfig(text);
-    setParseFailed(r === null || r.fields.length === 0);
-    setResult(r && r.fields.length > 0 ? r : null);
+  // Paste prima dva oblika: domovina.ai link (epizoda/kanal → config se gradi
+  // iz cdn.domovina.ai) ili JSON iz AI chata. Oba idu kroz isti review.
+  async function parse() {
+    setParseError(null);
     setExcluded(new Set());
+    const ref = parseDomovinaUrl(text);
+    let source = text;
+    if (ref) {
+      setFetching(true);
+      try {
+        source = JSON.stringify(await fetchDomovinaConfig(ref));
+      } catch (e) {
+        console.error(e);
+        setResult(null);
+        setParseError(t("dashboardNew.ai.linkFetchFailed"));
+        setFetching(false);
+        return;
+      }
+      setFetching(false);
+    }
+    const r = parseCampaignConfig(source);
+    if (!r || r.fields.length === 0) {
+      setResult(null);
+      setParseError(t("dashboardNew.ai.parseError"));
+      return;
+    }
+    setResult(r);
   }
 
   function apply() {
@@ -81,6 +105,7 @@ export function ConfigImport({
             .filter(Boolean)
             .join(" · ") || null,
         );
+      case "cover_image_url": return dash(current.coverImageUrl);
       case "starts_at": return dash(current.startsAt);
       case "ends_at": return dash(current.endsAt);
       case "subject_type": return current.subjectType;
@@ -130,12 +155,16 @@ export function ConfigImport({
           placeholder={t("dashboardNew.ai.pastePlaceholder")}
         />
         <div className="mt-2 flex items-center gap-3">
-          <Button type="button" size="sm" variant="outline" onClick={parse} disabled={!text.trim()}>
-            {t("dashboardNew.ai.parse")}
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => void parse()}
+            disabled={!text.trim() || fetching}
+          >
+            {fetching ? t("dashboardNew.ai.linkLoading") : t("dashboardNew.ai.parse")}
           </Button>
-          {parseFailed ? (
-            <p className="text-xs text-rust">{t("dashboardNew.ai.parseError")}</p>
-          ) : null}
+          {parseError ? <p className="text-xs text-rust">{parseError}</p> : null}
         </div>
       </div>
 
