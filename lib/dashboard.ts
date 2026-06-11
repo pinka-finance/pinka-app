@@ -27,6 +27,9 @@ export interface MyCampaign {
   latitude: number | null;
   longitude: number | null;
   location_name: string | null;
+  cover_image_url: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
 }
 
 export interface Tier {
@@ -97,14 +100,43 @@ export interface NewCampaignInput {
   latitude?: number | null;
   longitude?: number | null;
   locationName?: string | null;
+  coverImageUrl?: string | null;
+  // "YYYY-MM-DD" date-input vrijednosti (konverzija u timestamptz je ovdje)
+  startsAt?: string | null;
+  endsAt?: string | null;
   metadata?: Record<string, unknown>;
+}
+
+// Server-side greške (RPC raise / RLS / mreža) → stabilni ključevi koje forma
+// mapira na i18n poruke (form.serverErrors.*). Nepoznate greške se vraćaju
+// netaknute pa forma padne na generični errSaveFailed.
+function mapWriteError(error: { code?: string; message?: string } | null): Error {
+  const msg = error?.message ?? "";
+  if (msg.includes("campaign_rate_limited")) return new Error("server:rateLimited");
+  if (msg.includes("campaign_destination_locked")) return new Error("server:destinationLocked");
+  if (msg.includes("campaign_destination_missing")) return new Error("server:destinationMissing");
+  if (msg.includes("campaign_exists")) return new Error("server:exists");
+  if (msg.includes("min_exceeds_goal")) return new Error("form.errMinExceedsGoal");
+  if (msg.includes("invalid_")) return new Error("server:invalid");
+  if (error?.code === "42501" || msg.includes("row-level security"))
+    return new Error("server:kycRequired");
+  if (msg.includes("Failed to fetch") || msg.includes("NetworkError"))
+    return new Error("server:network");
+  return error instanceof Error ? error : new Error(msg || "save_failed");
+}
+
+function dateToStartIso(d: string | null | undefined): string | null {
+  return d ? new Date(d + "T00:00:00").toISOString() : null;
+}
+function dateToEndIso(d: string | null | undefined): string | null {
+  return d ? new Date(d + "T23:59:59.999").toISOString() : null;
 }
 
 const SELECT =
   "id, slug, title, type, state, visibility, goal_cents, currency, " +
   "destination_address, subject_type, subject_ref, description, " +
   "min_contribution_cents, recurrence, recurrence_anchor_day, " +
-  "latitude, longitude, location_name, " +
+  "latitude, longitude, location_name, cover_image_url, starts_at, ends_at, " +
   "campaign_stats(total_raised_cents, contributor_count)";
 
 function normalize(row: Record<string, unknown>): MyCampaign {
@@ -131,6 +163,9 @@ function normalize(row: Record<string, unknown>): MyCampaign {
     latitude: (row.latitude as number) ?? null,
     longitude: (row.longitude as number) ?? null,
     location_name: (row.location_name as string) ?? null,
+    cover_image_url: (row.cover_image_url as string) ?? null,
+    starts_at: (row.starts_at as string) ?? null,
+    ends_at: (row.ends_at as string) ?? null,
   };
 }
 
@@ -171,7 +206,43 @@ export async function getMyCampaign(id: string): Promise<MyCampaign | null> {
   return data ? normalize(data as unknown as Record<string, unknown>) : null;
 }
 
+// Kreiranje ide kroz create_campaign RPC (server-side validacija + slug +
+// idempotencija po client-generated id-u — retry nakon prekida mreže vraća
+// postojeću kampanju umjesto 23505). Dok migracija nije primijenjena (PGRST202
+// = funkcija ne postoji) pada se na legacy direktni insert.
 export async function createCampaign(input: NewCampaignInput): Promise<string> {
+  const sb = supabaseBrowser();
+  const id = input.id ?? crypto.randomUUID();
+  const { data, error } = await sb
+    .schema("pinka_finance")
+    .rpc("create_campaign", {
+      p_id: id,
+      p_account_id: input.accountId,
+      p_title: input.title,
+      p_type: input.type,
+      p_description: input.description || null,
+      p_goal_cents: input.goalCents,
+      p_min_contribution_cents: input.minContributionCents,
+      p_destination_address: input.destinationAddress,
+      p_subject_type: input.subjectType,
+      p_subject_ref: input.subjectRef,
+      p_visibility: input.visibility,
+      p_recurrence: input.recurrence ?? "none",
+      p_recurrence_anchor_day: input.recurrenceAnchorDay ?? null,
+      p_latitude: input.latitude ?? null,
+      p_longitude: input.longitude ?? null,
+      p_location_name: input.locationName ?? null,
+      p_cover_image_url: input.coverImageUrl ?? null,
+      p_starts_at: dateToStartIso(input.startsAt),
+      p_ends_at: dateToEndIso(input.endsAt),
+      p_metadata: input.metadata ?? {},
+    });
+  if (!error) return (data as { id: string }).id;
+  if (error.code === "PGRST202") return createCampaignLegacy({ ...input, id });
+  throw mapWriteError(error);
+}
+
+async function createCampaignLegacy(input: NewCampaignInput): Promise<string> {
   const sb = supabaseBrowser();
   const base = slugify(input.title) || "kampanja";
   for (let attempt = 0; attempt < 4; attempt++) {
@@ -197,16 +268,25 @@ export async function createCampaign(input: NewCampaignInput): Promise<string> {
         latitude: input.latitude ?? null,
         longitude: input.longitude ?? null,
         location_name: input.locationName ?? null,
+        cover_image_url: input.coverImageUrl ?? null,
+        starts_at: dateToStartIso(input.startsAt),
+        ends_at: dateToEndIso(input.endsAt),
         state: "draft",
         ...(input.metadata ? { metadata: input.metadata } : {}),
       })
       .select("id")
       .single();
     if (!error && data) return (data as { id: string }).id;
-    // 23505 = unique_violation (slug taken) → retry with suffix
     if ((error as { code?: string } | null)?.code !== "23505") {
-      throw error;
+      throw mapWriteError(error);
     }
+    // 23505 može biti i pkey (insert je prošao, a odgovor se izgubio pa je ovo
+    // retry) — ako kampanja s našim id-em postoji, gotovi smo.
+    if (input.id) {
+      const existing = await getMyCampaign(input.id).catch(() => null);
+      if (existing) return existing.id;
+    }
+    // inače: slug zauzet → retry sa sufiksom
   }
   throw new Error("slug_collision");
 }
@@ -230,6 +310,8 @@ export async function updateCampaign(
     longitude: number | null;
     location_name: string | null;
     cover_image_url: string | null;
+    starts_at: string | null;
+    ends_at: string | null;
     metadata: Record<string, unknown>;
   }>,
 ): Promise<void> {
@@ -239,8 +321,11 @@ export async function updateCampaign(
     .from("campaigns")
     .update(patch)
     .eq("id", id);
-  if (error) throw error;
+  if (error) throw mapWriteError(error);
 }
+
+/// "YYYY-MM-DD" | null → timestamptz ISO za update patch (početak/kraj dana).
+export const campaignDates = { start: dateToStartIso, end: dateToEndIso };
 
 // Postavi per-campaign Safe na postojeću kampanju: upiše destination_address i
 // spoji safe metadata u postojeći metadata (ne kloberira yield itd.). Adresa se

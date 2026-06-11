@@ -3,11 +3,14 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Wallet, ShieldCheck, Loader2 } from "lucide-react";
+import { Wallet, ShieldCheck, Loader2, Circle, CheckCircle2 } from "lucide-react";
 import { AuthGate, VerifiedGate } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { CampaignForm, type CampaignFormValues } from "@/components/dashboard/campaign-form";
+import { ConfigImport } from "@/components/dashboard/config-import";
+import { CampaignCard } from "@/components/campaign-card";
 import { createCampaign, getMyAccountId } from "@/lib/dashboard";
+import type { Campaign } from "@/lib/pinka";
 import {
   connectWallet,
   disconnectWallet,
@@ -23,6 +26,9 @@ import { useI18n, Rich } from "@/lib/i18n";
 // survive a navigation: it's stashed in sessionStorage right before the
 // handoff and consumed on return (dw_return=1&dw_account=…).
 const DRAFT_KEY = "pinka.campaign_draft_v1";
+// Kontinuirani autosave sirovog unosa (gubitak taba/crash) — čisti se nakon
+// uspješnog kreiranja. Vidi CampaignForm draftKey.
+const FORM_DRAFT_KEY = "pinka.campaign_form_draft_v1";
 
 interface CampaignDraft {
   draftId: string;
@@ -42,9 +48,10 @@ function saveDraft(d: CampaignDraft): void {
   window.sessionStorage.setItem(DRAFT_KEY, JSON.stringify(d));
 }
 
-function clearDraft(): void {
+function clearDrafts(): void {
   try {
     window.sessionStorage.removeItem(DRAFT_KEY);
+    window.localStorage.removeItem(FORM_DRAFT_KEY);
   } catch {
     /* ignore */
   }
@@ -79,7 +86,11 @@ function NewInner() {
   const [mode, setMode] = useState<SafeMode | null>(null);
   const [ecosystemSafe, setEcosystemSafe] = useState<`0x${string}` | null>(null);
   const [safe, setSafe] = useState<CampaignSafe | null>(null);
-  const [restored, setRestored] = useState<CampaignFormValues | undefined>(undefined);
+  const [restored, setRestored] = useState<Partial<CampaignFormValues> | undefined>(undefined);
+  // remount forme nakon AI importa — initial se ponovno primijeni
+  const [formKey, setFormKey] = useState(0);
+  // live snapshot za preview/checklist/AI export (emitira CampaignForm)
+  const [snapshot, setSnapshot] = useState<CampaignFormValues | null>(null);
   const [connecting, setConnecting] = useState(false);
   const [finishing, setFinishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -141,6 +152,9 @@ function NewInner() {
       latitude: v.latitude,
       longitude: v.longitude,
       locationName: v.locationName,
+      coverImageUrl: v.coverImageUrl,
+      startsAt: v.startsAt,
+      endsAt: v.endsAt,
       metadata: {
         safe: {
           signer_address: account.signerAddress,
@@ -151,7 +165,7 @@ function NewInner() {
         },
       },
     });
-    clearDraft();
+    clearDrafts();
     router.push(`/dashboard/manage?id=${id}`);
   }
 
@@ -204,70 +218,92 @@ function NewInner() {
   const connected = !!ecosystemSafe && mode !== null;
 
   return (
-    <div className="container-content max-w-4xl py-14">
+    // Namjerno šire od max-w-content: forma je data-heavy one-time desktop
+    // zadatak — sekcije u 2 stupca + sticky preview rail, bez dugog scrolla.
+    <div className="mx-auto w-full max-w-[1700px] px-5 py-12 sm:px-8 lg:px-12">
       <Link href="/dashboard" className="text-sm text-inkMuted hover:text-ink">
         ← {t("common.back")}
       </Link>
-      <h1 className="mt-4 text-display-md font-display font-semibold">{t("dashboardNew.title")}</h1>
-      <p className="mt-3 text-sm leading-relaxed text-inkMuted">
-        <Rich>{t("dashboardNew.intro")}</Rich>{" "}
-        <Link href="/kako-radi" className="underline underline-offset-2 hover:text-ink">
-          {t("dashboardNew.howItWorksLink")}
-        </Link>
-      </p>
-
-      {/* Korak 1 — ecosystem wallet; kampanja dobiva vlastiti račun */}
-      <div className="mt-10 card-base">
-        <h2 className="flex items-center gap-2 font-display font-semibold">
-          <ShieldCheck className="h-5 w-5 text-coral" /> {t("dashboardNew.step1Title")}
-        </h2>
+      <div className="max-w-3xl">
+        <h1 className="mt-4 text-display-md font-display font-semibold">
+          {t("dashboardNew.title")}
+        </h1>
         <p className="mt-3 text-sm leading-relaxed text-inkMuted">
-          <Rich>{t("dashboardNew.step1Desc")}</Rich>
+          <Rich>{t("dashboardNew.intro")}</Rich>{" "}
+          <Link href="/kako-radi" className="underline underline-offset-2 hover:text-ink">
+            {t("dashboardNew.howItWorksLink")}
+          </Link>
         </p>
-
-        {!connected ? (
-          <Button onClick={() => connect()} disabled={connecting} className="mt-6">
-            {connecting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Wallet className="h-4 w-4" />}
-            {connecting ? t("dashboardNew.openingWallet") : t("dashboardNew.connectWallet")}
-          </Button>
-        ) : (
-          <dl className="mt-6 space-y-3 text-xs">
-            <div>
-              <dt className="text-inkMuted">{t("dashboardNew.ecosystemWalletLabel")}</dt>
-              <dd className="break-all font-mono">{ecosystemSafe}</dd>
-            </div>
-            {mode === "derive" && safe ? (
-              <>
-                <div>
-                  <dt className="text-inkMuted">{t("dashboardNew.campaignSafeLabel")}</dt>
-                  <dd className="break-all font-mono text-coral-700">{safe.safeAddress}</dd>
-                </div>
-                <p className="pt-1 leading-relaxed text-inkMuted">
-                  <Rich>{t("dashboardNew.counterfactualNote")}</Rich>
-                </p>
-              </>
-            ) : (
-              <p className="pt-1 leading-relaxed text-inkMuted">
-                <Rich>{t("dashboardNew.walletAccountNote")}</Rich>
-              </p>
-            )}
-            <button
-              type="button"
-              onClick={changeWallet}
-              className="text-inkMuted underline underline-offset-2 hover:text-ink"
-            >
-              {t("dashboardNew.changeWallet")}
-            </button>
-          </dl>
-        )}
       </div>
 
-      {/* Korak 2 — detalji */}
-      <div className="mt-8 card-base">
-        <h2 className="font-display font-semibold">{t("dashboardNew.step2Title")}</h2>
-        <div className="mt-4">
+      <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(21rem,25rem)]">
+        <div className="space-y-6">
+          {/* ── Novčanik (bivši korak 1) ── */}
+          <div className="card-base !p-6">
+            <h2 className="flex items-center gap-2 font-display font-semibold">
+              <ShieldCheck className="h-5 w-5 text-coral" /> {t("dashboardNew.step1Title")}
+            </h2>
+            <p className="mt-3 text-sm leading-relaxed text-inkMuted">
+              <Rich>{t("dashboardNew.step1Desc")}</Rich>
+            </p>
+
+            {!connected ? (
+              <Button onClick={() => connect()} disabled={connecting} className="mt-5">
+                {connecting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Wallet className="h-4 w-4" />
+                )}
+                {connecting ? t("dashboardNew.openingWallet") : t("dashboardNew.connectWallet")}
+              </Button>
+            ) : (
+              <dl className="mt-5 space-y-3 text-xs">
+                <div>
+                  <dt className="text-inkMuted">{t("dashboardNew.ecosystemWalletLabel")}</dt>
+                  <dd className="break-all font-mono">{ecosystemSafe}</dd>
+                </div>
+                {mode === "derive" && safe ? (
+                  <>
+                    <div>
+                      <dt className="text-inkMuted">{t("dashboardNew.campaignSafeLabel")}</dt>
+                      <dd className="break-all font-mono text-coral-700">{safe.safeAddress}</dd>
+                    </div>
+                    <p className="pt-1 leading-relaxed text-inkMuted">
+                      <Rich>{t("dashboardNew.counterfactualNote")}</Rich>
+                    </p>
+                  </>
+                ) : (
+                  <p className="pt-1 leading-relaxed text-inkMuted">
+                    <Rich>{t("dashboardNew.walletAccountNote")}</Rich>
+                  </p>
+                )}
+                <button
+                  type="button"
+                  onClick={changeWallet}
+                  className="text-inkMuted underline underline-offset-2 hover:text-ink"
+                >
+                  {t("dashboardNew.changeWallet")}
+                </button>
+              </dl>
+            )}
+          </div>
+
+          {/* ── AI asistent: predložak / uvoz / izvoz ── */}
+          <ConfigImport
+            current={snapshot}
+            onApply={(patch) => {
+              setRestored({ ...(snapshot ?? {}), ...patch });
+              setFormKey((k) => k + 1);
+            }}
+          />
+
+          {/* ── Detalji ── */}
           <CampaignForm
+            key={formKey}
+            layout="wide"
+            draftKey={FORM_DRAFT_KEY}
             initial={restored}
+            onValuesChange={setSnapshot}
             submitLabel={t("dashboardNew.createCampaign")}
             lockedDestination={safe?.safeAddress ?? null}
             pendingDestinationNote={
@@ -302,6 +338,9 @@ function NewInner() {
                 latitude: v.latitude,
                 longitude: v.longitude,
                 locationName: v.locationName,
+                coverImageUrl: v.coverImageUrl,
+                startsAt: v.startsAt,
+                endsAt: v.endsAt,
                 metadata: {
                   safe: {
                     signer_address: safe.signerAddress,
@@ -312,13 +351,115 @@ function NewInner() {
                   },
                 },
               });
+              clearDrafts();
               router.push(`/dashboard/manage?id=${id}`);
             }}
           />
+
+          {error ? <p className="text-sm leading-relaxed text-rust">{error}</p> : null}
+        </div>
+
+        {/* ── Sticky rail: live preview + checklist ── */}
+        <aside className="hidden xl:block">
+          <div className="sticky top-20 space-y-5">
+            <PreviewRail snapshot={snapshot} connected={connected} />
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+}
+
+// Sastavi fake Campaign iz snapshot-a forme za CampaignCard preview.
+function toPreviewCampaign(s: CampaignFormValues, placeholderTitle: string): Campaign {
+  return {
+    id: "preview",
+    slug: "",
+    type: s.type,
+    title: s.title || placeholderTitle,
+    description: s.description || null,
+    subject_type: s.subjectType,
+    subject_ref: s.subjectRef,
+    goal_cents: s.goalCents,
+    min_contribution_cents: s.minContributionCents || 100,
+    currency: "eur",
+    cover_image_url: s.coverImageUrl,
+    state: "draft",
+    destination_address: s.destinationAddress || null,
+    chain: "gnosis",
+    latitude: s.latitude,
+    longitude: s.longitude,
+    location_name: s.locationName,
+    stats: { total_raised_cents: 0, contribution_count: 0, contributor_count: 0 },
+  };
+}
+
+function ChecklistItem({ done, label }: { done: boolean; label: string }) {
+  return (
+    <li className="flex items-start gap-2">
+      {done ? (
+        <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-teal-700" />
+      ) : (
+        <Circle className="mt-0.5 h-4 w-4 shrink-0 text-ink/20" />
+      )}
+      <span className={done ? "text-ink" : "text-inkMuted"}>{label}</span>
+    </li>
+  );
+}
+
+function PreviewRail({
+  snapshot,
+  connected,
+}: {
+  snapshot: CampaignFormValues | null;
+  connected: boolean;
+}) {
+  const { t } = useI18n();
+  const s = snapshot;
+  return (
+    <>
+      <div>
+        <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-inkSoft">
+          {t("dashboardNew.preview.title")}
+        </h3>
+        <p className="mt-1 text-xs text-inkMuted">{t("dashboardNew.preview.desc")}</p>
+        <div className="pointer-events-none mt-3" aria-hidden>
+          {s ? (
+            <CampaignCard campaign={toPreviewCampaign(s, t("dashboardNew.preview.placeholderTitle"))} />
+          ) : null}
         </div>
       </div>
 
-      {error ? <p className="mt-6 text-sm leading-relaxed text-rust">{error}</p> : null}
-    </div>
+      <div className="card-base !p-5">
+        <h3 className="font-display text-sm font-semibold uppercase tracking-wide text-inkSoft">
+          {t("dashboardNew.checklist.title")}
+        </h3>
+        <p className="mt-2 text-[11px] font-medium uppercase tracking-wide text-inkMuted">
+          {t("dashboardNew.checklist.required")}
+        </p>
+        <ul className="mt-2 space-y-2 text-sm">
+          <ChecklistItem
+            done={(s?.title.length ?? 0) >= 3}
+            label={t("dashboardNew.checklist.itemTitle")}
+          />
+          <ChecklistItem done={connected} label={t("dashboardNew.checklist.itemWallet")} />
+        </ul>
+        <p className="mt-4 text-[11px] font-medium uppercase tracking-wide text-inkMuted">
+          {t("dashboardNew.checklist.recommended")}
+        </p>
+        <ul className="mt-2 space-y-2 text-sm">
+          <ChecklistItem
+            done={(s?.description.length ?? 0) >= 100}
+            label={t("dashboardNew.checklist.itemDesc")}
+          />
+          <ChecklistItem done={!!s?.coverImageUrl} label={t("dashboardNew.checklist.itemCover")} />
+          <ChecklistItem done={s?.goalCents != null} label={t("dashboardNew.checklist.itemGoal")} />
+          <ChecklistItem
+            done={s?.latitude != null}
+            label={t("dashboardNew.checklist.itemLocation")}
+          />
+        </ul>
+      </div>
+    </>
   );
 }

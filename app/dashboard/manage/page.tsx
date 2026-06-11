@@ -11,6 +11,7 @@ import { useI18n } from "@/lib/i18n";
 import {
   getMyCampaign,
   updateCampaign,
+  campaignDates,
   setCampaignSafe,
   listTiers,
   createTier,
@@ -180,7 +181,6 @@ function ManageInner({ id }: { id: string }) {
               destination={campaign.destination_address}
               onDerived={reload}
             />
-            <div className="card-base">
             <CampaignForm
               submitLabel={t("manage.saveChanges")}
               initial={{
@@ -198,6 +198,9 @@ function ManageInner({ id }: { id: string }) {
                 latitude: campaign.latitude,
                 longitude: campaign.longitude,
                 locationName: campaign.location_name,
+                coverImageUrl: campaign.cover_image_url,
+                startsAt: campaign.starts_at,
+                endsAt: campaign.ends_at,
               }}
               onSubmit={async (v) => {
                 // Ne dopusti izlazak iz 'private' dok Safe (spremana adresa) nije
@@ -221,11 +224,13 @@ function ManageInner({ id }: { id: string }) {
                   latitude: v.latitude,
                   longitude: v.longitude,
                   location_name: v.locationName,
+                  cover_image_url: v.coverImageUrl,
+                  starts_at: campaignDates.start(v.startsAt),
+                  ends_at: campaignDates.end(v.endsAt),
                 });
                 reload();
               }}
             />
-            </div>
           </div>
         ) : null}
 
