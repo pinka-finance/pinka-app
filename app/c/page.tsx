@@ -14,6 +14,7 @@ import { fmtEur } from "@/lib/format";
 import { ContributePanel } from "@/components/contribute-panel";
 import { PermanentQr } from "@/components/permanent-qr";
 import { useI18n } from "@/lib/i18n";
+import { upsertMeta } from "@/lib/head-meta";
 
 // EURe (Monerium) on Gnosis — the canonical proxy 0x420CA0f9 that the rail uses
 // and that EMITS the Transfer events to the campaign Safe (verified on-chain).
@@ -30,7 +31,7 @@ export default function CampaignPage() {
 }
 
 function CampaignInner() {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   // Pretty URL: /c/{slug} (route param). Backward-compat: /c?slug={slug}.
   // CF Pages servira out/c.html za /c/* (vidi public/_redirects), pa slug
   // čitamo iz pathname-a, a query je fallback za stare linkove.
@@ -81,10 +82,24 @@ function CampaignInner() {
     return () => clearInterval(t);
   }, [slug, refresh]);
 
-  // Campaign pages own their document title (the campaign name) for SEO/sharing.
+  // Campaign pages own their head metadata for SEO/sharing: the title, the
+  // description, and the Open Graph/Twitter share card built from the 1200×630
+  // cover. SeoSync skips these tags on /c routes (and resets them to site
+  // defaults when navigating away). Falls back to the locale share image when a
+  // campaign has no cover.
   useEffect(() => {
-    if (campaign) document.title = `${campaign.title} · pinka`;
-  }, [campaign]);
+    if (!campaign) return;
+    document.title = `${campaign.title} · pinka`;
+    const desc = (campaign.description ?? "").replace(/\s+/g, " ").trim().slice(0, 200);
+    const ogImage =
+      campaign.cover_image_url || `${window.location.origin}/og-${locale}.png`;
+    upsertMeta("name", "description", desc);
+    upsertMeta("property", "og:title", campaign.title);
+    upsertMeta("property", "og:description", desc);
+    upsertMeta("property", "og:image", ogImage);
+    upsertMeta("property", "og:image:alt", campaign.title);
+    upsertMeta("name", "twitter:image", ogImage);
+  }, [campaign, locale]);
 
   if (campaign === undefined) {
     return <div className="container-content py-16 text-inkMuted">{t("common.loading")}</div>;

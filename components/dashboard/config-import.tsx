@@ -12,6 +12,7 @@ import {
   type ImportResult,
 } from "@/lib/campaign-config";
 import { parseDomovinaUrl, fetchDomovinaConfig } from "@/lib/domovina-import";
+import { materializeCover } from "@/lib/cover-transform";
 import type { CampaignFormValues } from "@/components/dashboard/campaign-form";
 import { useI18n, Rich } from "@/lib/i18n";
 
@@ -67,6 +68,12 @@ export function ConfigImport({
       setFetching(true);
       try {
         const config = await fetchDomovinaConfig(ref);
+        // Normalise the imported cover (YT thumbnail 16:9 / channel avatar) into
+        // the canonical 1200×630 pinka cover stored in pinka-covers. Best-effort:
+        // falls back to the raw source URL if the transform/upload fails.
+        if (typeof config.cover_image_url === "string") {
+          config.cover_image_url = await materializeCover(config.cover_image_url);
+        }
         source = JSON.stringify(config);
         setLinkSeed({ config, kind: ref.kind });
       } catch (e) {
