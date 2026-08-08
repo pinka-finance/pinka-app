@@ -19,8 +19,18 @@ const hr = {
     homeAria: "pinka — naslovnica",
   },
   footer: {
-    copyright: "© pinka.finance",
+    copyright: "© {year} pinka.finance · ITalk d.o.o.",
     rail: "SEPA Instant · Monerium EURe · Gnosis",
+    colFamily: "Obitelj proizvoda",
+    colLegal: "Pravno",
+    linkLanding: "O pinki",
+    linkPrivacy: "Privatnost",
+    linkTerms: "Uvjeti",
+    imprintLead: "pinka",
+    imprint:
+      "je proizvod tvrtke ITalk d.o.o. za informacijske tehnologije · IX. Južna obala 20, 10000 Zagreb, Hrvatska · OIB: 54872935051 · MBS: 081042440 · EUID: HRSR.081042440 · Trgovački sud u Zagrebu · direktor: Matija Stepanić",
+    legalNote:
+      "Pinka nije licencirana platna usluga — ITalk je non-custodial pružatelj softvera, a regulirane funkcije (izdavanje elektroničkog novca, KYC) obavlja licencirani izdavatelj Monerium (EMI / MiCA EMT). Sredstva kampanje drži Safe novčanik organizatora, ne pinka.",
   },
   update: {
     ready: "Nova verzija je spremna",
@@ -598,7 +608,7 @@ const hr = {
     repoApp: "pinka aplikacija — ova stranica: kampanje, checkout, dashboard",
     repoWallet: "DOMOVINA wallet — passkey novčanik i SEPA ↔ EURe rail",
     repoLanding: "pinka.finance — landing stranica",
-    repoMvp: "pinka MVP — pametni ugovori i rani eksperimenti",
+    repoMvp: "pinka MVP — pametni ugovori i rani eksperimenti (nisu auditirani)",
     whiteLabelTitle: "Napravi svoju Pinku",
     whiteLabelBody:
       "Želiš **vlastitu platformu za kampanje ili vlastiti wallet pod svojim brandom** — za udrugu, župu, klub, medij ili zajednicu? Forkaj i prilagodi: boje, ime, domena — sve je tvoje.",
@@ -625,8 +635,18 @@ const en: Messages = {
     homeAria: "pinka — home",
   },
   footer: {
-    copyright: "© pinka.finance",
+    copyright: "© {year} pinka.finance · ITalk d.o.o.",
     rail: "SEPA Instant · Monerium EURe · Gnosis",
+    colFamily: "Product family",
+    colLegal: "Legal",
+    linkLanding: "About pinka",
+    linkPrivacy: "Privacy",
+    linkTerms: "Terms",
+    imprintLead: "pinka",
+    imprint:
+      "is a product of ITalk d.o.o. za informacijske tehnologije · IX. Južna obala 20, 10000 Zagreb, Croatia · OIB: 54872935051 · MBS: 081042440 · EUID: HRSR.081042440 · Commercial Court in Zagreb · director: Matija Stepanić",
+    legalNote:
+      "Pinka is not a licensed payment service — ITalk is a non-custodial software provider, and the regulated functions (issuing electronic money, KYC) are performed by a licensed issuer, Monerium (EMI / MiCA EMT). Campaign funds are held by the organiser's Safe wallet, not by pinka.",
   },
   update: {
     ready: "A new version is ready",
@@ -1196,7 +1216,7 @@ const en: Messages = {
     repoApp: "pinka app — this site: campaigns, checkout, dashboard",
     repoWallet: "DOMOVINA wallet — passkey wallet and the SEPA ↔ EURe rail",
     repoLanding: "pinka.finance — landing page",
-    repoMvp: "pinka MVP — smart contracts and early experiments",
+    repoMvp: "pinka MVP — smart contracts and early experiments (not audited)",
     whiteLabelTitle: "Build your own Pinka",
     whiteLabelBody:
       "Want **your own campaign platform or your own wallet under your brand** — for an association, parish, club, media outlet or community? Fork and customize: colors, name, domain — it's all yours.",
