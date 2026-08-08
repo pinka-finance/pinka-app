@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { CampaignForm, type CampaignFormValues } from "@/components/dashboard/campaign-form";
 import { ConfigImport } from "@/components/dashboard/config-import";
 import { CampaignCard } from "@/components/campaign-card";
+import { toMetadata as legalToMetadata } from "@/lib/legal";
 import { createCampaign, getMyAccountId } from "@/lib/dashboard";
 import type { Campaign } from "@/lib/pinka";
 import {
@@ -33,6 +34,14 @@ const FORM_DRAFT_KEY = "pinka.campaign_form_draft_v1";
 interface CampaignDraft {
   draftId: string;
   values: CampaignFormValues;
+}
+
+
+// metadata.legal iz deklaracije u formi (P1–P3, lib/legal.ts). Prazno ako tip
+// primatelja nije odabran — create_campaign tada dobije metadata bez `legal`.
+function legalMeta(v: CampaignFormValues): Record<string, unknown> {
+  const m = legalToMetadata(v.legal, new Date().toISOString());
+  return m ? { legal: m } : {};
 }
 
 function loadDraft(): CampaignDraft | null {
@@ -156,6 +165,7 @@ function NewInner() {
       startsAt: v.startsAt,
       endsAt: v.endsAt,
       metadata: {
+        ...legalMeta(v),
         safe: {
           signer_address: account.signerAddress,
           ...(account.saltNonce ? { salt_nonce: account.saltNonce } : {}),
@@ -342,6 +352,7 @@ function NewInner() {
                 startsAt: v.startsAt,
                 endsAt: v.endsAt,
                 metadata: {
+        ...legalMeta(v),
                   safe: {
                     signer_address: safe.signerAddress,
                     salt_nonce: safe.saltNonce,
