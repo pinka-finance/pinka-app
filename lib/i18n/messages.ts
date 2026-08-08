@@ -619,6 +619,96 @@ const hr = {
     cta: "Kreiraj kampanju",
     diagramLoading: "Učitavam dijagram…",
   },
+  legal: {
+    section: "Tko prima sredstva",
+    sectionDesc:
+      "Hrvatski propisi različito tretiraju udrugu, fizičku osobu i tvrtku. Ovaj odjeljak određuje je li kampanja dopuštena i kakav je porezni tretman kod primatelja.",
+    recipientLabel: "Tip primatelja",
+    recipientDesc: "Tko je pravno nositelj kampanje i na čiji račun sredstva sjedaju.",
+    recipients: {
+      association: "Udruga",
+      foundation: "Zaklada",
+      institution: "Ustanova, vjerska zajednica ili JLS",
+      individual: "Fizička osoba",
+      company: "Trgovačko društvo ili obrt",
+    },
+    recipientPlaceholder: "Odaberi…",
+    basisLabel: "Pravna osnova prikupljanja",
+    basisDesc:
+      "Od osnove ovisi treba li rješenje i hoće li primljena sredstva biti oporeziva.",
+    bases: {
+      own_activity: "Redovna djelatnost iz statuta",
+      humanitarian: "Humanitarna akcija (uz rješenje)",
+      public_action: "Javno oglašena akcija",
+      health: "Darovanje za zdravstvene potrebe",
+      commercial: "Poslovni primitak",
+    },
+    basisHelp: {
+      own_activity:
+        "Članarine, oprema, obnova prostora, projekti — sve što pokriva statut. Ne traži rješenje po Zakonu o humanitarnoj pomoći.",
+      humanitarian:
+        "Vremenski ograničeno prikupljanje za određenog korisnika ili svrhu. Traži rješenje nadležnog upravnog tijela **prije** početka.",
+      public_action:
+        "Akcija općekorisne svrhe u korist osjetljive skupine iz koje nedvojbeno proizlazi potrebitost, uz **javno objavljen namjenski račun** osobe u potrebi. Ne traži rješenje.",
+      health:
+        "Za zdravstvene potrebe koje ne pokriva osiguranje. Uplata mora ići na račun primatelja ili zdravstvene ustanove, uz vjerodostojne isprave.",
+      commercial:
+        "Primatelj je u profitnom sektoru — primljeno se vodi kao prihod i oporezuje.",
+    },
+    permitLabel: "Broj rješenja (klasa / urbroj)",
+    permitDesc:
+      "Rješenje kojim je odobrena humanitarna akcija. Upisuje se radi evidencije; Pinka ga ne provjerava kod nadležnog tijela.",
+    permitPlaceholder: "npr. UP/I-550-01/26-01/123 · 2170-1-26-2",
+    relationLabel:
+      "Prikupljaš li za sebe, bračnog ili izvanbračnog druga, partnera ili srodnika do zaključno drugog stupnja?",
+    relationDesc:
+      "Zakon o humanitarnoj pomoći (NN 156/23, čl. 23) to izrijekom zabranjuje fizičkoj osobi kao organizatoru humanitarne akcije.",
+    yes: "Da",
+    no: "Ne",
+    blockedTitle: "Ova kampanja ne može se pokrenuti kao humanitarna akcija",
+    blockedBody:
+      "Zakon o humanitarnoj pomoći (NN 156/23, čl. 23) zabranjuje fizičkoj osobi da organizira humanitarnu akciju za sebe, bračnog ili izvanbračnog druga, životnog partnera te srodnika u ravnoj lozi i pobočnoj lozi do zaključno drugog stupnja. Prikupljanje bez rješenja kažnjivo je novčano.",
+    blockedAlternativesTitle: "Što možeš umjesto toga",
+    blockedAlt1:
+      "**Javno oglašena akcija** — ako je riječ o osjetljivoj skupini i potrebitost je nedvojbena, a račun je javno objavljen. Promijeni pravnu osnovu iznad.",
+    blockedAlt2:
+      "**Zdravstvene potrebe** — ako se prikuplja za liječenje koje osiguranje ne pokriva.",
+    blockedAlt3:
+      "**Neka akciju organizira udruga ili osoba izvan tog kruga srodstva**, uz rješenje nadležnog ureda.",
+    ackLabel:
+      "Potvrđujem da su navedeni podaci točni i da sam kao organizator odgovoran za pravnu osnovu i porezni tretman prikupljenih sredstava.",
+    ackDesc:
+      "Pinka je tehnički pružatelj i nije organizator akcije niti porezni savjetnik.",
+    notesTitle: "Na što pripaziti",
+    notes: {
+      statute:
+        "Svrha kampanje mora biti pokrivena statutom, a sredstva sjedaju na račun organizacije — ne na privatni račun.",
+      companyTaxable:
+        "Primljena donacija trgovačkom društvu ili obrtu je **prihod** i ulazi u poreznu osnovicu. Ako zauzvrat nudiš vidljivost ili promidžbu, to je **sponzorstvo** — treba izdati račun i obračunati PDV.",
+      individualCommercial:
+        "Ovaj tip kampanje nije darovanje nego isporuka uz naknadu. Fizička osoba za to treba odgovarajući pravni oblik i izdaje račun.",
+      publicAction:
+        "Račun otvoren za ovu akciju mora biti javno objavljen, a potrebitost dokaziva. Bez toga primljeno se smatra oporezivim dohotkom.",
+      humanitarianDuties:
+        "Akcija traje najviše 90 dana, sredstva idu na **zaseban** račun, raspodjela je u roku od 8 dana (30 kod katastrofe), a završno izvješće u roku od 30 dana.",
+      health:
+        "Uplata mora ići na račun primatelja ili zdravstvene ustanove i biti popraćena vjerodostojnim ispravama.",
+      tickets:
+        "Prodaja ulaznica je gospodarska djelatnost: treba izdati račun. Prelaskom 40.000 € godišnjeg prometa nastaje obveza PDV-a, a obveznici PDV-a od 1.1.2026. izdaju eRačune.",
+      unspent:
+        "Sredstva koja se ne utroše za navedenu svrhu smatraju se oporezivim primitkom. Planiraj što s viškom ako kampanja premaši cilj.",
+    },
+    learnMore: "Pročitaj puni pravni okvir",
+    errRecipientRequired: "Odaberi tip primatelja.",
+    errBasisRequired: "Odaberi pravnu osnovu prikupljanja.",
+    errBasisInvalid: "Odabrana osnova nije moguća za ovaj tip primatelja i kampanje.",
+    errRelationRequired: "Odgovori na pitanje o srodstvu.",
+    errArticle23Blocked:
+      "Zabranjeno po čl. 23 Zakona o humanitarnoj pomoći — vidi objašnjenje i alternative ispod.",
+    errPermitRequired: "Upiši broj rješenja o odobrenju humanitarne akcije.",
+    errPermitLong: "Broj rješenja je predugačak.",
+    errAckRequired: "Potvrdi izjavu da bi mogao nastaviti.",
+  },
   notFound: {
     code: "404",
   },
@@ -1226,6 +1316,96 @@ const en: Messages = {
     ctaTitle: "Ready to start a campaign?",
     cta: "Create a campaign",
     diagramLoading: "Loading diagram…",
+  },
+  legal: {
+    section: "Who receives the funds",
+    sectionDesc:
+      "Croatian law treats an association, a natural person and a company differently. This section determines whether the campaign is permitted and how the recipient is taxed.",
+    recipientLabel: "Recipient type",
+    recipientDesc: "Who legally runs the campaign and whose account the funds land in.",
+    recipients: {
+      association: "Association",
+      foundation: "Foundation",
+      institution: "Institution, religious community or local authority",
+      individual: "Natural person",
+      company: "Company or sole trader",
+    },
+    recipientPlaceholder: "Choose…",
+    basisLabel: "Legal basis for collecting",
+    basisDesc:
+      "The basis determines whether a permit is required and whether the funds received are taxable.",
+    bases: {
+      own_activity: "Regular activity under the statute",
+      humanitarian: "Humanitarian action (permit required)",
+      public_action: "Publicly announced action",
+      health: "Donation for health needs",
+      commercial: "Business receipt",
+    },
+    basisHelp: {
+      own_activity:
+        "Membership fees, equipment, renovation, projects — anything the statute covers. No permit required under the Humanitarian Aid Act.",
+      humanitarian:
+        "A time-limited collection for a specific beneficiary or purpose. Requires a decision from the competent authority **before** it starts.",
+      public_action:
+        "An action serving a public-benefit purpose for a vulnerable group, where the need is unambiguous and the dedicated account of the person in need is **publicly published**. No permit required.",
+      health:
+        "For health needs not covered by insurance. Payment must go to the recipient's or the healthcare institution's account, with supporting documentation.",
+      commercial:
+        "The recipient is in the for-profit sector — what is received counts as revenue and is taxed.",
+    },
+    permitLabel: "Permit reference (klasa / urbroj)",
+    permitDesc:
+      "The decision approving the humanitarian action. Recorded for your own audit trail; pinka does not verify it with the authority.",
+    permitPlaceholder: "e.g. UP/I-550-01/26-01/123 · 2170-1-26-2",
+    relationLabel:
+      "Are you collecting for yourself, a spouse or partner, or a relative up to and including the second degree?",
+    relationDesc:
+      "The Humanitarian Aid Act (NN 156/23, art. 23) expressly forbids this for a natural person acting as organiser of a humanitarian action.",
+    yes: "Yes",
+    no: "No",
+    blockedTitle: "This campaign cannot run as a humanitarian action",
+    blockedBody:
+      "The Humanitarian Aid Act (NN 156/23, art. 23) forbids a natural person from organising a humanitarian action for themselves, a spouse or partner, or a relative in the direct line and the collateral line up to and including the second degree. Collecting without a permit carries a fine.",
+    blockedAlternativesTitle: "What you can do instead",
+    blockedAlt1:
+      "**A publicly announced action** — if a vulnerable group is involved, the need is unambiguous and the account is publicly published. Change the legal basis above.",
+    blockedAlt2:
+      "**Health needs** — if you are collecting for treatment that insurance does not cover.",
+    blockedAlt3:
+      "**Have the action organised by an association or a person outside that family circle**, with a permit from the competent office.",
+    ackLabel:
+      "I confirm the details above are accurate and that, as the organiser, I am responsible for the legal basis and the tax treatment of the funds collected.",
+    ackDesc:
+      "Pinka is a technical provider — not the organiser of the action and not a tax adviser.",
+    notesTitle: "Things to watch",
+    notes: {
+      statute:
+        "The campaign's purpose must be covered by the statute, and funds must land in the organisation's account — not a private one.",
+      companyTaxable:
+        "A donation received by a company or sole trader is **revenue** and enters the tax base. If you offer visibility or promotion in return, that is **sponsorship** — an invoice must be issued and VAT charged.",
+      individualCommercial:
+        "This campaign type is not a donation but a supply for consideration. A natural person needs an appropriate legal form for it and must issue an invoice.",
+      publicAction:
+        "The account opened for this action must be publicly published and the need must be demonstrable. Without that, what is received counts as taxable income.",
+      humanitarianDuties:
+        "The action runs for at most 90 days, funds go into a **separate** account, distribution is within 8 days (30 in a disaster), and the final report within 30 days.",
+      health:
+        "Payment must go to the recipient's or the healthcare institution's account and be supported by proper documentation.",
+      tickets:
+        "Selling tickets is an economic activity: an invoice must be issued. Above €40,000 of annual turnover VAT registration follows, and VAT payers issue e-invoices from 1 January 2026.",
+      unspent:
+        "Funds not spent on the stated purpose count as taxable income. Plan what happens to any surplus if the campaign exceeds its goal.",
+    },
+    learnMore: "Read the full legal framework",
+    errRecipientRequired: "Choose a recipient type.",
+    errBasisRequired: "Choose a legal basis for collecting.",
+    errBasisInvalid: "That basis is not available for this recipient and campaign type.",
+    errRelationRequired: "Answer the question about family relation.",
+    errArticle23Blocked:
+      "Prohibited under art. 23 of the Humanitarian Aid Act — see the explanation and alternatives below.",
+    errPermitRequired: "Enter the reference of the decision approving the humanitarian action.",
+    errPermitLong: "The permit reference is too long.",
+    errAckRequired: "Confirm the statement to continue.",
   },
   notFound: {
     code: "404",

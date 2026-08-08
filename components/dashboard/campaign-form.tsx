@@ -3,6 +3,18 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import type { CampaignType } from "@/lib/pinka";
+import {
+  EMPTY_DECLARATION,
+  RECIPIENT_TYPES,
+  basesFor,
+  checkLegal,
+  isBlocked,
+  notesFor,
+  requiresLegalBasis,
+  type LegalDeclaration,
+  type LegalBasis,
+  type RecipientType,
+} from "@/lib/legal";
 import { parseEurToCents } from "@/lib/format";
 import { CoverUpload } from "@/components/dashboard/cover-upload";
 import { useI18n, Rich } from "@/lib/i18n";
@@ -32,6 +44,9 @@ export interface CampaignFormValues {
   // "YYYY-MM-DD" date-input vrijednosti; null = bez vremenskog okvira
   startsAt: string | null;
   endsAt: string | null;
+  // P1–P3: tko prima i po kojoj pravnoj osnovi (lib/legal.ts). Sprema se u
+  // metadata.legal na kampanji.
+  legal: LegalDeclaration;
 }
 
 // Sirovo stanje forme (stringovi kako ih korisnik tipka) — autosave sprema OVO,
@@ -53,6 +68,11 @@ interface RawState {
   coverImageUrl: string | null;
   startsAt: string;
   endsAt: string;
+  recipientType: RecipientType | "";
+  legalBasis: LegalBasis | "";
+  permitRef: string;
+  selfOrFamily: "" | "yes" | "no";
+  legalAck: boolean;
 }
 
 const TYPE_VALUES: CampaignType[] = [
@@ -118,6 +138,21 @@ function initialToRaw(initial?: Partial<CampaignFormValues>): RawState {
     coverImageUrl: initial?.coverImageUrl ?? null,
     startsAt: isoToDateInput(initial?.startsAt ?? null),
     endsAt: isoToDateInput(initial?.endsAt ?? null),
+    recipientType: initial?.legal?.recipientType ?? "",
+    legalBasis: initial?.legal?.legalBasis ?? "",
+    permitRef: initial?.legal?.permitRef ?? "",
+    selfOrFamily: initial?.legal?.selfOrFamily ?? "",
+    legalAck: initial?.legal?.acknowledged ?? false,
+  };
+}
+
+function rawToLegal(r: RawState): LegalDeclaration {
+  return {
+    recipientType: r.recipientType,
+    legalBasis: r.legalBasis,
+    permitRef: r.permitRef,
+    selfOrFamily: r.selfOrFamily,
+    acknowledged: r.legalAck,
   };
 }
 
@@ -148,6 +183,7 @@ function rawToValues(r: RawState): CampaignFormValues {
     coverImageUrl: r.coverImageUrl,
     startsAt: r.startsAt || null,
     endsAt: r.endsAt || null,
+    legal: rawToLegal(r),
   };
 }
 
@@ -155,6 +191,7 @@ type Errors = Partial<Record<string, string>>;
 
 // Redoslijed za "skoči na prvu grešku"
 const FIELD_ORDER = [
+  "recipientType", "legalBasis", "selfOrFamily", "permitRef", "legalAck",
   "title", "description", "goal", "min", "anchorDay", "startsAt", "endsAt",
   "coords", "destination", "subjectType", "subjectRef",
 ] as const;
@@ -345,6 +382,8 @@ export function CampaignForm({
     if (st && !/^[a-z0-9_]{1,40}$/.test(st)) e.subjectType = "form.errSubjectType";
     if (r.subjectRef.trim().length > 200) e.subjectRef = "form.errSubjectRefLong";
 
+    Object.assign(e, checkLegal(rawToLegal(r), r.type));
+
     const destinationPending = !!pendingDestinationNote && !lockedDestination;
     const dest = (lockedDestination ?? r.destination).trim();
     if (!destinationPending && !ADDR_RE.test(dest)) {
@@ -413,6 +452,12 @@ export function CampaignForm({
     }
   }
 
+  const legalDecl = rawToLegal(raw);
+  const legalBases = basesFor(raw.recipientType, raw.type);
+  const legalNeedsBasis = requiresLegalBasis(raw.recipientType, raw.type);
+  const legalBlocked = isBlocked(legalDecl);
+  const legalNotes = notesFor(raw.recipientType, raw.legalBasis, raw.type);
+
   const errorCount = Object.keys(errors).length;
 
   return (
@@ -431,6 +476,157 @@ export function CampaignForm({
       ) : null}
 
       <div className={"grid grid-cols-1 gap-5 " + (layout === "wide" ? "xl:grid-cols-2" : "")}>
+        {/* ── Tko prima (P1–P3) ── */}
+        <Section title={t("legal.section")} span>
+          <p className="pt-1 text-xs leading-relaxed text-inkMuted">
+            {t("legal.sectionDesc")}
+          </p>
+          <div className="divide-y divide-ink/5">
+            <Field
+              id="recipientType"
+              label={t("legal.recipientLabel")}
+              desc={t("legal.recipientDesc")}
+              error={err("recipientType")}
+            >
+              <select
+                className={inputCls(!!errors.recipientType)}
+                value={raw.recipientType}
+                onChange={(e) => {
+                  const rt = e.target.value as RecipientType | "";
+                  // osnova ovisi o tipu primatelja — resetiraj je da ne ostane nevaljana
+                  set({ recipientType: rt, legalBasis: "", permitRef: "", selfOrFamily: "" });
+                }}
+              >
+                <option value="">{t("legal.recipientPlaceholder")}</option>
+                {RECIPIENT_TYPES.map((v) => (
+                  <option key={v} value={v}>{t(`legal.recipients.${v}`)}</option>
+                ))}
+              </select>
+            </Field>
+
+            {legalBases.length > 0 ? (
+              <Field
+                id="legalBasis"
+                label={t("legal.basisLabel")}
+                desc={
+                  <>
+                    <p>{t("legal.basisDesc")}</p>
+                    {raw.legalBasis ? (
+                      <p className="mt-2 rounded-lg bg-coral/5 px-3 py-2 text-inkSoft">
+                        <Rich>{t(`legal.basisHelp.${raw.legalBasis}`)}</Rich>
+                      </p>
+                    ) : null}
+                  </>
+                }
+                error={err("legalBasis")}
+              >
+                <select
+                  className={inputCls(!!errors.legalBasis)}
+                  value={raw.legalBasis}
+                  onChange={(e) =>
+                    set({
+                      legalBasis: e.target.value as LegalBasis | "",
+                      permitRef: "",
+                      selfOrFamily: "",
+                    })
+                  }
+                >
+                  <option value="">{t("legal.recipientPlaceholder")}</option>
+                  {legalBases.map((v) => (
+                    <option key={v} value={v}>{t(`legal.bases.${v}`)}</option>
+                  ))}
+                </select>
+              </Field>
+            ) : null}
+
+            {raw.legalBasis === "humanitarian" ? (
+              <>
+                <Field
+                  id="selfOrFamily"
+                  label={t("legal.relationLabel")}
+                  desc={t("legal.relationDesc")}
+                  error={err("selfOrFamily")}
+                >
+                  <div className="flex gap-4">
+                    {(["no", "yes"] as const).map((v) => (
+                      <label key={v} className="flex items-center gap-2 text-sm">
+                        <input
+                          type="radio"
+                          name="selfOrFamily"
+                          value={v}
+                          checked={raw.selfOrFamily === v}
+                          onChange={() => set({ selfOrFamily: v })}
+                        />
+                        {t(`legal.${v}`)}
+                      </label>
+                    ))}
+                  </div>
+                </Field>
+                {!legalBlocked ? (
+                  <Field
+                    id="permitRef"
+                    label={t("legal.permitLabel")}
+                    desc={t("legal.permitDesc")}
+                    error={err("permitRef")}
+                  >
+                    <input
+                      className={inputCls(!!errors.permitRef)}
+                      value={raw.permitRef}
+                      placeholder={t("legal.permitPlaceholder")}
+                      onChange={(e) => set({ permitRef: e.target.value })}
+                      onBlur={() => validateField("permitRef")}
+                    />
+                  </Field>
+                ) : null}
+              </>
+            ) : null}
+
+            {/* P3 — tvrda blokada uz objašnjenje i izlaz */}
+            {legalBlocked ? (
+              <div className="my-4 rounded-lg border border-rust/40 bg-rust/5 p-4">
+                <p className="text-sm font-medium text-rust">{t("legal.blockedTitle")}</p>
+                <p className="mt-2 text-xs leading-relaxed text-inkSoft">
+                  {t("legal.blockedBody")}
+                </p>
+                <p className="mt-3 text-xs font-medium">{t("legal.blockedAlternativesTitle")}</p>
+                <ul className="mt-1.5 list-disc space-y-1 pl-4 text-xs leading-relaxed text-inkSoft">
+                  <li><Rich>{t("legal.blockedAlt1")}</Rich></li>
+                  <li><Rich>{t("legal.blockedAlt2")}</Rich></li>
+                  <li><Rich>{t("legal.blockedAlt3")}</Rich></li>
+                </ul>
+              </div>
+            ) : null}
+
+            {legalNotes.length > 0 ? (
+              <div className="py-5">
+                <p className="mb-2 text-sm font-medium">{t("legal.notesTitle")}</p>
+                <ul className="list-disc space-y-1.5 pl-4 text-xs leading-relaxed text-inkMuted">
+                  {legalNotes.map((k) => (
+                    <li key={k}><Rich>{t(k)}</Rich></li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {legalNeedsBasis ? (
+              <Field id="legalAck" label="" error={err("legalAck")}>
+                <label className="flex items-start gap-2.5 text-xs leading-relaxed">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={raw.legalAck}
+                    onChange={(e) => set({ legalAck: e.target.checked })}
+                  />
+                  <span>
+                    {t("legal.ackLabel")}
+                    <span className="mt-1 block text-inkMuted">{t("legal.ackDesc")}</span>
+                  </span>
+                </label>
+              </Field>
+            ) : null}
+          </div>
+        </Section>
+
         {/* ── Osnovno ── */}
         <Section title={t("form.sections.basics")} span>
           <div className="grid grid-cols-1 gap-x-10 xl:grid-cols-2">
@@ -786,7 +982,7 @@ export function CampaignForm({
       {error ? <p className="mt-6 text-sm leading-relaxed text-rust">{error}</p> : null}
 
       <div className="mt-7 flex flex-wrap items-center gap-4">
-        <Button type="submit" disabled={busy}>
+        <Button type="submit" disabled={busy || legalBlocked}>
           {busy ? t("form.saving") : submitLabel}
         </Button>
         {errorCount > 0 ? (

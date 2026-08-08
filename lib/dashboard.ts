@@ -30,6 +30,7 @@ export interface MyCampaign {
   cover_image_url: string | null;
   starts_at: string | null;
   ends_at: string | null;
+  metadata: Record<string, unknown> | null;
 }
 
 export interface Tier {
@@ -136,7 +137,7 @@ const SELECT =
   "id, slug, title, type, state, visibility, goal_cents, currency, " +
   "destination_address, subject_type, subject_ref, description, " +
   "min_contribution_cents, recurrence, recurrence_anchor_day, " +
-  "latitude, longitude, location_name, cover_image_url, starts_at, ends_at, " +
+  "latitude, longitude, location_name, cover_image_url, starts_at, ends_at, metadata, " +
   "campaign_stats(total_raised_cents, contributor_count)";
 
 function normalize(row: Record<string, unknown>): MyCampaign {
@@ -166,6 +167,7 @@ function normalize(row: Record<string, unknown>): MyCampaign {
     cover_image_url: (row.cover_image_url as string) ?? null,
     starts_at: (row.starts_at as string) ?? null,
     ends_at: (row.ends_at as string) ?? null,
+    metadata: (row.metadata as Record<string, unknown> | null) ?? null,
   };
 }
 
@@ -353,6 +355,29 @@ export async function setCampaignSafe(
     })
     .eq("id", id);
   if (error) throw error;
+}
+
+// Spremi pravnu deklaraciju (lib/legal.ts) u metadata.legal, spajajući je u
+// postojeći metadata — isti obrazac kao setCampaignSafe, jer plain update na
+// `metadata` pregazio bi safe/yield ključeve.
+export async function setCampaignLegal(
+  id: string,
+  legal: Record<string, unknown>,
+): Promise<void> {
+  const sb = supabaseBrowser();
+  const { data: cur } = await sb
+    .schema("pinka_finance")
+    .from("campaigns")
+    .select("metadata")
+    .eq("id", id)
+    .maybeSingle();
+  const existing = (cur?.metadata as Record<string, unknown> | null) ?? {};
+  const { error } = await sb
+    .schema("pinka_finance")
+    .from("campaigns")
+    .update({ metadata: { ...existing, legal } })
+    .eq("id", id);
+  if (error) throw mapWriteError(error);
 }
 
 export async function listTiers(campaignId: string): Promise<Tier[]> {

@@ -7,10 +7,12 @@ import { AuthGate } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { fmtEur, parseEurToCents } from "@/lib/format";
 import { CampaignForm } from "@/components/dashboard/campaign-form";
+import { fromMetadata as legalFromMetadata, toMetadata as legalToMetadata } from "@/lib/legal";
 import { useI18n } from "@/lib/i18n";
 import {
   getMyCampaign,
   updateCampaign,
+  setCampaignLegal,
   campaignDates,
   setCampaignSafe,
   listTiers,
@@ -201,6 +203,9 @@ function ManageInner({ id }: { id: string }) {
                 coverImageUrl: campaign.cover_image_url,
                 startsAt: campaign.starts_at,
                 endsAt: campaign.ends_at,
+                legal: legalFromMetadata(
+                  (campaign.metadata as Record<string, unknown> | null)?.legal,
+                ),
               }}
               onSubmit={async (v) => {
                 // Ne dopusti izlazak iz 'private' dok Safe (spremana adresa) nije
@@ -228,6 +233,8 @@ function ManageInner({ id }: { id: string }) {
                   starts_at: campaignDates.start(v.startsAt),
                   ends_at: campaignDates.end(v.endsAt),
                 });
+                const legal = legalToMetadata(v.legal, new Date().toISOString());
+                if (legal) await setCampaignLegal(id, legal as unknown as Record<string, unknown>);
                 reload();
               }}
             />

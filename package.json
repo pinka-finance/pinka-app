@@ -11,7 +11,8 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "test:config": "node scripts/test-campaign-config.mjs",
-    "test:config:live": "node scripts/test-campaign-config.mjs --live"
+    "test:config:live": "node scripts/test-campaign-config.mjs --live",
+    "test:legal": "node scripts/test-legal.mjs"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.1.0",
